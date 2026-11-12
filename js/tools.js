@@ -1,4 +1,4 @@
-// DocuCraft AI - Production Ready & Bug-Free Script (Mobile Optimized KB & MB)
+// DocuCraft AI - Production Ready & Bug-Free Script
 
 let activeTool = '';
 let selectedFiles = [];
@@ -447,7 +447,8 @@ function updateResizerOptions() {
       sizeSelect.appendChild(opt);
     });
   } else {
-    const mbValues = [1, 2, 5, 10, 20, 50, 100, 200, 300, 400, 500];
+    // 200, 300, 400, 500 MB removed; capped at 100 MB
+    const mbValues = [1, 2, 5, 10, 20, 50, 100];
     mbValues.forEach(val => {
       const opt = document.createElement('option');
       opt.value = val;
@@ -660,7 +661,24 @@ function setProgress(percent, text) {
   if (pct) pct.textContent = Math.round(safe) + '%';
 }
 
-// Ultra-Fast & Exact Single JPEG Inflator (100% Zero Quality Loss on Mobile & Desktop)
+// Memory-safe Image Loader using ObjectURL (prevents mobile browser crash on large files)
+function loadImageSafe(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
+}
+
+// 100% Valid Single JPEG Inflator with Exact Standard Length Encoding
 async function padJpegSafely(blob, targetBytes) {
   if (blob.size >= targetBytes) return blob;
   const buffer = await blob.arrayBuffer();
@@ -711,36 +729,28 @@ async function padJpegSafely(blob, targetBytes) {
   let diff = targetBytes - bytes.length;
   if (diff < 5) return blob;
 
-  const segSize = 65535;
-  const segLc = segSize - 2;
-  const singleSeg = new Uint8Array(segSize);
-  singleSeg[0] = 0xFF;
-  singleSeg[1] = 0xFE;
-  singleSeg[2] = (segLc >> 8) & 0xFF;
-  singleSeg[3] = segLc & 0xFF;
-  singleSeg.fill(0x20, 4);
+  const fullChunkSize = 65535;
+  const fullLc = fullChunkSize - 2;
 
-  const segsPerBlock = 16;
-  const blockSize = segSize * segsPerBlock;
-  const blockParts = new Array(segsPerBlock).fill(singleSeg);
-  const megaBlob = new Blob(blockParts);
+  const fullChunk = new Uint8Array(fullChunkSize);
+  fullChunk[0] = 0xFF;
+  fullChunk[1] = 0xFE;
+  fullChunk[2] = (fullLc >> 8) & 0xFF;
+  fullChunk[3] = fullLc & 0xFF;
+  fullChunk.fill(0x20, 4);
 
+  const fullBlob = new Blob([fullChunk]);
   const parts = [bytes.subarray(0, sosIdx)];
 
-  while (diff >= blockSize) {
-    parts.push(megaBlob);
-    diff -= blockSize;
-  }
-
-  const singleSegBlob = new Blob([singleSeg]);
-  while (diff >= segSize) {
-    parts.push(singleSegBlob);
-    diff -= segSize;
+  while (diff >= fullChunkSize) {
+    parts.push(fullBlob);
+    diff -= fullChunkSize;
   }
 
   if (diff >= 5) {
-    const remLc = diff - 2;
-    const remChunk = new Uint8Array(diff);
+    const remChunkSize = diff;
+    const remLc = remChunkSize - 2;
+    const remChunk = new Uint8Array(remChunkSize);
     remChunk[0] = 0xFF;
     remChunk[1] = 0xFE;
     remChunk[2] = (remLc >> 8) & 0xFF;
@@ -809,179 +819,133 @@ async function executeToolAction() {
     const PDFLibObj = await ensurePdfLibLoaded();
 
     if (activeTool === 'kbResizer') {
-      setProgress(20, 'Processing image...');
+      setProgress(15, 'Analyzing image...');
       const valInput = parseFloat(document.getElementById('optPresetSize')?.value) || 50;
       const unit = document.getElementById('optTargetUnit')?.value || 'KB';
       const customName = document.getElementById('optCustomFileName')?.value?.trim() || 'Resized_Photo';
       const isMB = (unit === 'MB');
 
-      const exactTargetBytes = isMB
-        ? Math.round(valInput * 1000 * 1000)
-        : Math.floor(valInput * 1000 * 0.99);
+      const maxAllowedBytes = isMB
+        ? Math.floor(valInput * 1000 * 1000 * 0.98)
+        : Math.floor(valInput * 1000 * 0.98);
 
-      const inputFile = selectedFiles[0];
-      const isJpegFile = inputFile.type === 'image/jpeg' || inputFile.type === 'image/jpg' || /\.(jpe?g)$/i.test(inputFile.name);
+      const img = await loadImageSafe(selectedFiles[0]);
+
+      const origW = img.naturalWidth || img.width;
+      const origH = img.naturalHeight || img.height;
+      const aspect = origW / origH;
+
+      setProgress(30, 'Optimizing clarity...');
+
+      function drawCleanCanvas(w, h) {
+        const cv = document.createElement('canvas');
+        cv.width = w;
+        cv.height = h;
+        const cx = cv.getContext('2d');
+        cx.imageSmoothingEnabled = true;
+        cx.imageSmoothingQuality = 'high';
+        cx.fillStyle = '#ffffff';
+        cx.fillRect(0, 0, w, h);
+        cx.drawImage(img, 0, 0, w, h);
+        return cv;
+      }
 
       let bestBlob = null;
 
-      // CASE A: User selected MB
       if (isMB) {
-        if (isJpegFile && inputFile.size <= exactTargetBytes) {
-          setProgress(65, `Preserving 100% original sharpness (${valInput} MB)...`);
-          bestBlob = await padJpegSafely(inputFile, exactTargetBytes);
+        setProgress(50, 'Enhancing image for target MB...');
+        let renderW = origW;
+        let renderH = origH;
+
+        if (Math.max(origW, origH) < 2048) {
+          const scale = Math.min(2.5, 2048 / Math.max(origW, origH));
+          renderW = Math.round(origW * scale);
+          renderH = Math.round(origH * scale);
+        }
+
+        const cv = drawCleanCanvas(renderW, renderH);
+        const baseBlob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.96));
+
+        setProgress(75, `Padding safely to ${valInput} MB...`);
+        bestBlob = await padJpegSafely(baseBlob, maxAllowedBytes);
+      } else {
+        const fullCv = drawCleanCanvas(origW, origH);
+        const testBlob = await new Promise(r => fullCv.toBlob(r, 'image/jpeg', 0.95));
+
+        if (testBlob && testBlob.size <= maxAllowedBytes) {
+          bestBlob = await padJpegSafely(testBlob, maxAllowedBytes);
         } else {
-          const objUrl = URL.createObjectURL(inputFile);
-          const img = new Image();
-          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = objUrl; });
-          URL.revokeObjectURL(objUrl);
+          let candidateWidths = [origW];
+          if (origW > 1600) candidateWidths.push(1600);
+          if (origW > 1280) candidateWidths.push(1280);
+          if (origW > 960) candidateWidths.push(960);
+          if (origW > 720) candidateWidths.push(720);
+          if (origW > 540) candidateWidths.push(540);
+          if (origW > 380) candidateWidths.push(380);
 
-          const origW = img.naturalWidth || img.width;
-          const origH = img.naturalHeight || img.height;
+          for (let i = 0; i < candidateWidths.length; i++) {
+            const w = candidateWidths[i];
+            const h = Math.round(w / aspect);
+            const cv = drawCleanCanvas(w, h);
 
-          const cv = document.createElement('canvas');
-          cv.width = origW;
-          cv.height = origH;
-          const cx = cv.getContext('2d');
-          cx.fillStyle = '#ffffff';
-          cx.fillRect(0, 0, origW, origH);
-          cx.drawImage(img, 0, 0, origW, origH);
+            let lowQ = 0.35;
+            let highQ = 0.95;
+            let localBest = null;
 
-          const baseBlob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.98));
-
-          if (baseBlob.size >= exactTargetBytes) {
-            let lowQ = 0.40, highQ = 0.98;
-            for (let step = 0; step < 6; step++) {
+            for (let step = 0; step < 7; step++) {
               const midQ = Number(((lowQ + highQ) / 2).toFixed(3));
               const b = await new Promise(r => cv.toBlob(r, 'image/jpeg', midQ));
-              if (b && b.size <= exactTargetBytes) {
-                bestBlob = b;
+              if (b && b.size <= maxAllowedBytes) {
+                localBest = b;
                 lowQ = midQ;
               } else {
                 highQ = midQ;
               }
             }
-            if (bestBlob && bestBlob.size < exactTargetBytes) {
-              bestBlob = await padJpegSafely(bestBlob, exactTargetBytes);
-            }
-          } else {
-            bestBlob = await padJpegSafely(baseBlob, exactTargetBytes);
-          }
-        }
-      }
-      // CASE B: User selected KB (High-Sharpness Mobile-First Compression)
-      else {
-        if (isJpegFile && inputFile.size <= exactTargetBytes) {
-          // Original file is already within target KB: 100% zero re-encode, zero blur
-          bestBlob = await padJpegSafely(inputFile, exactTargetBytes);
-        } else {
-          const objUrl = URL.createObjectURL(inputFile);
-          const img = new Image();
-          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = objUrl; });
-          URL.revokeObjectURL(objUrl);
 
-          const origW = img.naturalWidth || img.width;
-          const origH = img.naturalHeight || img.height;
-          const aspect = origW / origH;
-
-          function drawCleanCanvas(w, h) {
-            const cv = document.createElement('canvas');
-            cv.width = w;
-            cv.height = h;
-            const cx = cv.getContext('2d');
-            cx.imageSmoothingEnabled = true;
-            cx.imageSmoothingQuality = 'high';
-            cx.fillStyle = '#ffffff';
-            cx.fillRect(0, 0, w, h);
-            cx.drawImage(img, 0, 0, w, h);
-            return cv;
-          }
-
-          // Step 1: Try keeping FULL original resolution first with high quality (0.55 - 0.98) so text stays razor-sharp
-          const fullCv = drawCleanCanvas(origW, origH);
-          let lowQ = 0.55;
-          let highQ = 0.98;
-          for (let step = 0; step < 6; step++) {
-            const midQ = Number(((lowQ + highQ) / 2).toFixed(3));
-            const b = await new Promise(r => fullCv.toBlob(r, 'image/jpeg', midQ));
-            if (b && b.size <= exactTargetBytes) {
-              bestBlob = b;
-              lowQ = midQ;
-            } else {
-              highQ = midQ;
+            if (localBest && localBest.size <= maxAllowedBytes) {
+              bestBlob = localBest;
+              break;
             }
           }
 
-          // Step 2: Only if full resolution cannot fit in tiny target KB, step down resolution gently while keeping quality >= 0.65
           if (!bestBlob) {
-            const candidateWidths = [];
-            [1800, 1440, 1200, 1024, 860, 720, 600].forEach(w => {
-              if (origW > w) candidateWidths.push(w);
-            });
-
-            for (let i = 0; i < candidateWidths.length; i++) {
-              const w = candidateWidths[i];
-              const h = Math.round(w / aspect);
-              const cv = drawCleanCanvas(w, h);
-
-              let qLow = 0.60;
-              let qHigh = 0.95;
-              let localBest = null;
-
-              for (let step = 0; step < 6; step++) {
-                const midQ = Number(((qLow + qHigh) / 2).toFixed(3));
-                const b = await new Promise(r => cv.toBlob(r, 'image/jpeg', midQ));
-                if (b && b.size <= exactTargetBytes) {
-                  localBest = b;
-                  qLow = midQ;
-                } else {
-                  qHigh = midQ;
-                }
-              }
-
-              if (localBest && localBest.size <= exactTargetBytes) {
-                bestBlob = localBest;
-                break;
-              }
-            }
-          }
-
-          // Step 3: Extreme small KB fallback (e.g. 10 KB)
-          if (!bestBlob) {
-            let fbW = Math.min(origW, 540);
-            while (!bestBlob && fbW >= 240) {
+            let fbW = Math.min(origW, 400);
+            while (!bestBlob && fbW >= 180) {
               const fbH = Math.round(fbW / aspect);
               const cv = drawCleanCanvas(fbW, fbH);
-              let q = 0.60;
-              while (q >= 0.25) {
+              let q = 0.45;
+              while (q >= 0.10) {
                 const b = await new Promise(r => cv.toBlob(r, 'image/jpeg', q));
-                if (b && b.size <= exactTargetBytes) {
+                if (b && b.size <= maxAllowedBytes) {
                   bestBlob = b;
                   break;
                 }
-                q -= 0.07;
+                q -= 0.05;
               }
-              fbW = Math.round(fbW * 0.85);
+              fbW = Math.round(fbW * 0.80);
             }
           }
         }
       }
 
       if (!bestBlob) {
-        bestBlob = inputFile;
+        const fullCv = drawCleanCanvas(origW, origH);
+        bestBlob = await new Promise(r => fullCv.toBlob(r, 'image/jpeg', 0.85));
       }
 
-      setProgress(95, 'Starting instant download...');
+      setProgress(90, 'Preparing download...');
       const finalFileName = `${customName}_${valInput}${unit}.jpg`;
       downloadBlob(bestBlob, finalFileName, 'image/jpeg');
 
       const sizeDisplay = isMB
-        ? (bestBlob.size / (1000 * 1000)).toFixed(2) + ' MB'
+        ? (bestBlob.size / (1000 * 1000)).toFixed(1) + ' MB'
         : (bestBlob.size / 1000).toFixed(1) + ' KB';
 
       closeWorkspace();
       setTimeout(() => {
         showSuccessPopup(`Photo Resized Successfully (${sizeDisplay})!`);
-      }, 250);
+      }, 300);
       return;
 
     } else if (activeTool === 'passportGrid') {
@@ -991,9 +955,7 @@ async function executeToolAction() {
       const borderType = document.getElementById('optPassportBorder')?.value || 'thin';
       const fileName = document.getElementById('optPassportFileName')?.value?.trim() || 'Passport_Photo';
 
-      const rawData = await readFileAsDataURL(selectedFiles[0]);
-      const img = new Image();
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = rawData; });
+      const img = await loadImageSafe(selectedFiles[0]);
 
       const pw = 413;
       const ph = 531;
@@ -1121,9 +1083,7 @@ async function executeToolAction() {
       const targetH = examType === 'photo' ? 230 : 60;
       const targetMaxBytes = examType === 'photo' ? 50 * 1024 : 20 * 1024;
 
-      const rawData = await readFileAsDataURL(selectedFiles[0]);
-      const img = new Image();
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = rawData; });
+      const img = await loadImageSafe(selectedFiles[0]);
 
       const canvas = document.createElement('canvas');
       canvas.width = targetW;
@@ -1317,7 +1277,7 @@ function readFileAsDataURL(file) {
   });
 }
 
-// 100% Direct Force Downloader (Safe for Mobile Chrome/Android large 100MB-500MB files)
+// 100% Reliable Cross-Device Downloader (Mobile & Desktop Safe)
 function downloadBlob(content, name, mimeType = 'application/octet-stream') {
   if (!content) return;
   const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
@@ -1328,10 +1288,16 @@ function downloadBlob(content, name, mimeType = 'application/octet-stream') {
   a.href = url;
   a.download = name || 'downloaded_file';
   document.body.appendChild(a);
-  a.click();
+  
+  a.dispatchEvent(new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    view: window
+  }));
 
+  // Keep ObjectURL alive for 60 seconds so mobile download managers can finish reading large MB blobs
   setTimeout(() => {
     if (a.parentNode) a.parentNode.removeChild(a);
     window.URL.revokeObjectURL(url);
-  }, 15000);
+  }, 60000);
 }
