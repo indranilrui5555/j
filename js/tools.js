@@ -447,8 +447,8 @@ function updateResizerOptions() {
       sizeSelect.appendChild(opt);
     });
   } else {
-    // 200, 300, 400, 500 MB removed; capped at 100 MB
-    const mbValues = [1, 2, 5, 10, 20, 50, 100];
+    // 1 MB to 100 MB (including 30 MB)
+    const mbValues = [1, 2, 5, 10, 20, 30, 50, 100];
     mbValues.forEach(val => {
       const opt = document.createElement('option');
       opt.value = val;
