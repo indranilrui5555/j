@@ -1068,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 (function () {
   // Replace with your Gemini API Key from Google AI Studio
-  const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+  const GEMINI_API_KEY = "AQ.Ab8RN6JFDlxiuxCd3MtLUXyV9dkl8ojbLpadxKM5tHLMFMupCA";
 
   const SYSTEM_PROMPT = `
     You are 'DocuCraft AI Smart Assistant', an all-in-one multilingual intelligent assistant for https://docucraftai.website.
