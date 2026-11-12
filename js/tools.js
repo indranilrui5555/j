@@ -1,4 +1,4 @@
-// DocuCraft AI - Ultra-Fast (<1s) & Crystal-Clear Production Script
+// DocuCraft AI - Ultra-Fast (<1s) Mobile & Desktop Production Script
 
 let activeTool = '';
 let selectedFiles = [];
@@ -119,9 +119,10 @@ function launchTool(toolKey) {
   if (fileInput) {
     fileInput.value = '';
     if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'pdfToJpg', 'pdfToWord', 'pdfToExcel', 'editPdf'].includes(toolKey)) {
-      fileInput.accept = 'application/pdf';
+      fileInput.accept = '.pdf,application/pdf';
     } else if (['jpgToPdf', 'pngToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
-      fileInput.accept = 'image/*,image/jpeg,image/png,image/webp,image/jpg';
+      // Bypass slow Android Google Photos cloud picker for instant (<0.2s) local file selection
+      fileInput.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
     } else if (toolKey === 'wordToPdf') {
       fileInput.accept = '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     } else if (toolKey === 'excelToPdf') {
@@ -447,7 +448,6 @@ function updateResizerOptions() {
       sizeSelect.appendChild(opt);
     });
   } else {
-    // 1 MB to 100 MB (including 30 MB)
     const mbValues = [1, 2, 5, 10, 20, 30, 50, 100];
     mbValues.forEach(val => {
       const opt = document.createElement('option');
@@ -565,6 +565,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('wsFileInput');
   if (fileInput) {
     fileInput.addEventListener('change', function (e) {
+      const dropText = document.getElementById('wsDropText');
+      if (dropText) dropText.innerText = 'Loading selected file...';
+
       if (e.target.files && e.target.files.length > 0) {
         if (fileInput.hasAttribute('multiple')) {
           const newFiles = Array.from(e.target.files);
@@ -575,10 +578,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderFileList();
 
-        const dropText = document.getElementById('wsDropText');
         if (dropText && selectedFiles.length > 0) {
           dropText.innerText = `Selected: ${selectedFiles[0].name}`;
         }
+      } else if (dropText) {
+        dropText.innerText = 'Tap to select photo/signature';
       }
     });
 
@@ -766,7 +770,6 @@ async function padJpegSafely(blob, targetBytes) {
   return new Blob(parts.slice(0, idx + 1), { type: 'image/jpeg' });
 }
 
-// Fast Canvas-to-Blob Helper
 function canvasToBlobFast(canvas, quality) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
 }
@@ -855,7 +858,6 @@ async function executeToolAction() {
       let bestBlob = null;
 
       if (isMB) {
-        // Ultra-HD upscaling + instant zero-copy padding (<1s)
         let renderW = origW;
         let renderH = origH;
         const maxSide = Math.max(origW, origH);
@@ -868,8 +870,6 @@ async function executeToolAction() {
         const baseBlob = await canvasToBlobFast(cv, 0.96);
         bestBlob = await padJpegSafely(baseBlob, maxAllowedBytes);
       } else {
-        // Smart 1-Shot High-Clarity Compression (<1s)
-        // Estimates optimal dimensions directly from target KB so quality stays crisp (0.72 - 0.92)
         const targetPixels = maxAllowedBytes * 4.2;
         const origPixels = origW * origH;
         let scale = 1;
@@ -888,13 +888,11 @@ async function executeToolAction() {
         let probeBlob = await canvasToBlobFast(cv, 0.85);
 
         if (probeBlob.size <= maxAllowedBytes) {
-          // If already smaller than target, boost quality to max (0.95) and pad cleanly
           const hqBlob = await canvasToBlobFast(cv, 0.95);
           bestBlob = hqBlob.size <= maxAllowedBytes
             ? await padJpegSafely(hqBlob, maxAllowedBytes)
             : probeBlob;
         } else {
-          // Calculate exact quality ratio in 1 single step
           const ratio = maxAllowedBytes / probeBlob.size;
           const estQ = Math.max(0.45, Math.min(0.84, Number((0.85 * Math.pow(ratio, 0.85)).toFixed(2))));
           let secondBlob = await canvasToBlobFast(cv, estQ);
@@ -902,7 +900,6 @@ async function executeToolAction() {
           if (secondBlob.size <= maxAllowedBytes) {
             bestBlob = secondBlob;
           } else {
-            // Final guaranteed fallback with slightly tighter dimension + crisp 0.65 quality
             const downScale = Math.sqrt(maxAllowedBytes / secondBlob.size) * 0.92;
             const fbW = Math.max(180, Math.round(targetW * downScale));
             const fbH = Math.max(180, Math.round(fbW / aspect));
