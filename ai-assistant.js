@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // =========================================================
 (function () {
   // এখানে AIzaSy... দিয়ে শুরু হওয়া আপনার আসল Gemini API Key বসান
-  const GEMINI_API_KEY = "AIzaSyAQ.Ab8RN6JFDlxiuxCd3MtLUXyV9dkl8ojbLpadxKM5tHLMFMupCA";
+  const GEMINI_API_KEY = "AQ.Ab8RN6JFDlxiuxCd3MtLUXyV9dkl8ojbLpadxKM5tHLMFMupCA";
 
   const SYSTEM_PROMPT = `
     You are 'DocuCraft AI Smart Assistant', an all-in-one multilingual intelligent assistant for https://docucraftai.website.
