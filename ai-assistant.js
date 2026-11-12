@@ -22,44 +22,19 @@ if ('speechSynthesis' in window) {
   loadSystemVoices();
 }
 
-// 2. Fix Mic Layout Jitter & Auto-Inject 'AI' Badge Beside Mic
-function initMicAndAiBadge() {
+// 2. Keep Mic Layout Clean (Without AI Badge)
+function initMicLayout() {
   const micBtn = document.getElementById('voiceSearchBtn') || document.querySelector('button[onclick*="startVoice"], button[onclick*="toggleVoice"]');
   if (micBtn) {
     micBtn.style.display = 'inline-flex';
     micBtn.style.alignItems = 'center';
     micBtn.style.justifyContent = 'center';
     micBtn.style.flexShrink = '0';
-    micBtn.style.minWidth = '38px';
-    micBtn.style.height = '38px';
-    micBtn.style.position = 'relative';
-
-    if (!document.getElementById('docucraft-ai-badge')) {
-      const aiBadge = document.createElement('span');
-      aiBadge.id = 'docucraft-ai-badge';
-      aiBadge.innerText = 'AI';
-      aiBadge.style.display = 'inline-flex';
-      aiBadge.style.alignItems = 'center';
-      aiBadge.style.justifyContent = 'center';
-      aiBadge.style.fontSize = '10px';
-      aiBadge.style.fontWeight = '800';
-      aiBadge.style.letterSpacing = '0.5px';
-      aiBadge.style.color = '#ffffff';
-      aiBadge.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
-      aiBadge.style.padding = '2px 6px';
-      aiBadge.style.borderRadius = '6px';
-      aiBadge.style.marginLeft = '6px';
-      aiBadge.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.4)';
-      aiBadge.style.cursor = 'pointer';
-      aiBadge.onclick = () => {
-        if (typeof window.toggleDcAssistant === 'function') {
-          window.toggleDcAssistant(true);
-        }
-      };
-
-      micBtn.parentNode.insertBefore(aiBadge, micBtn.nextSibling);
-    }
   }
+
+  // Remove any previously injected AI badge if cached
+  const oldBadge = document.getElementById('docucraft-ai-badge');
+  if (oldBadge) oldBadge.remove();
 
   const statusElem = document.getElementById('voice-status');
   if (statusElem) {
@@ -70,7 +45,7 @@ function initMicAndAiBadge() {
   }
 }
 
-// 3. Center Floating AI Card UI (Mobile & Laptop)
+// 3. Center Floating Voice Feedback Card UI (Only appears during voice search)
 function showCenterAICard(userQuery, aiReply, toolName = '', targetUrl = '') {
   let modal = document.getElementById('aiCenterModal');
   if (!modal) {
@@ -122,7 +97,7 @@ function showCenterAICard(userQuery, aiReply, toolName = '', targetUrl = '') {
   const btnContainer = document.getElementById('aiActionBtnContainer');
 
   if (userQuery) userElem.innerText = `“${userQuery}”`;
-  toolElem.innerText = toolName || "DocuCraft AI";
+  toolElem.innerText = toolName || "DocuCraft Search";
   replyElem.innerText = aiReply;
 
   if (targetUrl) {
@@ -321,7 +296,54 @@ const siteKnowledgeBase = [
   { name: "Contact & Support Desk", desc_bn: "এটি কন্ট্যাক্ট ও সাপোর্ট ডেস্ক। যেকোনো সাহায্য বা যোগাযোগের জন্য এখানে যেতে পারেন।", desc_hi: "सहायता और संपर्क करने के लिए सपोर्ट डेस्क पर जाएं।", desc_en: "Reach our official support desk for inquiries and help.", keywords: ["contact", "support", "help", "সাহায্য", "যোগাযোগ"], url: "contact.html" }
 ];
 
-// 8. Natural Language Processor & Smart Search
+// 8. Live Search Filter Function (Brings matched tools right to the front)
+function filterToolsLive(searchTerm) {
+  const query = searchTerm.toLowerCase().trim();
+  
+  // Switch to 'All' tab automatically when searching so hidden category tools also show up
+  if (query.length > 0) {
+    const allCategoryTab = document.querySelector('.filter-btn[onclick*="all"], button[onclick*="all"]');
+    if (allCategoryTab && !allCategoryTab.classList.contains('active')) {
+      allCategoryTab.click();
+    }
+  }
+
+  // Find all matching URLs from knowledge base keywords (supports Bengali, Hindi, English keywords)
+  const matchedUrls = new Set();
+  if (query.length > 0) {
+    siteKnowledgeBase.forEach(item => {
+      const nameMatch = item.name.toLowerCase().includes(query);
+      const kwMatch = item.keywords.some(kw => kw.toLowerCase().includes(query) || query.includes(kw.toLowerCase()));
+      if (nameMatch || kwMatch) {
+        matchedUrls.add(item.url.toLowerCase());
+      }
+    });
+  }
+
+  // Filter tool cards on the page
+  const allCards = document.querySelectorAll('.tool-card, .tools-grid > a, .tools-grid > div');
+  allCards.forEach(card => {
+    if (!query) {
+      card.style.display = '';
+      return;
+    }
+
+    const cardText = card.innerText.toLowerCase();
+    const linkEl = card.tagName === 'A' ? card : card.querySelector('a');
+    const href = linkEl ? (linkEl.getAttribute('href') || '').toLowerCase() : '';
+
+    const isDirectTextMatch = cardText.includes(query);
+    const isKeywordUrlMatch = Array.from(matchedUrls).some(url => href.includes(url));
+
+    if (isDirectTextMatch || isKeywordUrlMatch) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// 9. Natural Language Processor & Smart Search
 function handleUserQuery(query) {
   if (!query) return;
 
@@ -347,6 +369,9 @@ function handleUserQuery(query) {
     .replace(/(open|show|find|go to|launch|cholo|dekhao|kholo|please|tool|khol|kholo ji|chalu karo|চালু করো|খুলুন|খোল|দেখাও|খুলবে|খোলো|দাও|আমাকে|হিসাব|টা|টি|করো|করুন)/gi, ' ')
     .trim()
     .replace(/\s+/g, ' ');
+
+  // Filter tools visually on page immediately
+  filterToolsLive(cleanQuery);
 
   let bestMatchedItem = null;
   let maxScore = 0;
@@ -381,22 +406,15 @@ function handleUserQuery(query) {
     }
     speakAndDisplay(raw, message, lang, bestMatchedItem.name, bestMatchedItem.url);
   } else {
-    const searchInput = document.getElementById('toolSearchInput') || document.querySelector('#toolSearch, input[type="search"]');
-    if (searchInput) {
-      searchInput.value = cleanQuery;
-      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
     let notFoundMsg = "আপনার জন্য টুলটি খুঁজে বের করছি।";
-    if (lang === 'en-US') notFoundMsg = "Searching for relevant tools for you.";
-    else if (lang === 'hi-IN') notFoundMsg = "आपके लिए सही टूल खोज रहा हूँ।";
+    if (lang === 'en-US') notFoundMsg = "Showing matching tools for you.";
+    else if (lang === 'hi-IN') notFoundMsg = "आपके लिए सही टूल दिखा रहा हूँ।";
 
-    speakAndDisplay(raw, notFoundMsg, lang, "DocuCraft AI", "");
+    speakAndDisplay(raw, notFoundMsg, lang, "DocuCraft Search", "");
   }
 }
 
-// 9. Microphone Input Controller
+// 10. Microphone Input Controller
 function toggleVoiceInput(inputElementId = 'toolSearchInput') {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -494,9 +512,9 @@ function startVoice() {
   toggleVoiceInput('toolSearchInput');
 }
 
-// 10. Initialization on DOM Load
+// 11. Initialization on DOM Load
 document.addEventListener('DOMContentLoaded', () => {
-  initMicAndAiBadge();
+  initMicLayout();
 
   const cards = document.querySelectorAll('.popular-card, .tool-card');
   cards.forEach(card => {
@@ -509,308 +527,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const searchInput = document.getElementById('toolSearchInput') || document.querySelector('#toolSearch, input[type="search"]');
   if (searchInput) {
+    // Live filter as user types in search box
+    searchInput.addEventListener('input', function() {
+      filterToolsLive(this.value);
+    });
+
+    // Also support Enter key to speak and open matched tool
     searchInput.addEventListener('keydown', function(event) {
       if (event.key === 'Enter') {
         event.preventDefault();
         const query = this.value.trim();
         if (query) {
-          const allCategoryTab = document.querySelector('.filter-btn[onclick*="all"], button[onclick*="all"]');
-          if (allCategoryTab && !allCategoryTab.classList.contains('active')) {
-            allCategoryTab.click();
-          }
-          if (typeof handleUserQuery === 'function') {
-            handleUserQuery(query);
-          }
+          handleUserQuery(query);
         }
       }
     });
   }
 });
-
-// =========================================================
-// 11. DocuCraft Smart Chatbot Modal & Floating Trigger Button
-// =========================================================
-(function () {
-  // এখানে AIzaSy... দিয়ে শুরু হওয়া আপনার আসল Gemini API Key বসান
-  const GEMINI_API_KEY = "AQ.Ab8RN6JFDlxiuxCd3MtLUXyV9dkl8ojbLpadxKM5tHLMFMupCA";
-
-  const SYSTEM_PROMPT = `
-    You are 'DocuCraft AI Smart Assistant', an all-in-one multilingual intelligent assistant for https://docucraftai.website.
-    
-    Your Capabilities:
-    1. DocuCraft Website Expert: Guide users on all tools available on https://docucraftai.website (PDF Merge, Split, Compress, PDF to Word/JPG, Image Resizer, Document Converter, Typing Test, Financial Calculators). Always provide clear steps and clickable links to https://docucraftai.website when tools are requested.
-    2. Full Internet & Universal AI Assistant: Answer ANY question across all subjects—coding, writing, math, education, business, daily life, and live Google Search queries.
-    3. Image & Document Analysis: Analyze uploaded images (extract text/OCR, explain content, or give editing/resizing tips).
-    4. Multilingual Rule: Always detect the user's language (English, Bengali, Hindi, Arabic, Spanish, French, etc.) and reply naturally in that exact same language.
-  `;
-
-  function initChatWidget() {
-    if (document.getElementById("dcAiOverlay")) return;
-
-    // Inject CSS
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .dc-floating-trigger { position:fixed; bottom:22px; right:22px; z-index:9998; background:linear-gradient(135deg,#3b82f6,#8b5cf6); color:#fff; border:none; border-radius:50px; padding:12px 18px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:0 10px 25px rgba(59,130,246,0.5); transition:transform 0.2s ease; font-family:system-ui,-apple-system,sans-serif; }
-      .dc-floating-trigger:hover { transform:scale(1.06); }
-      .dc-ai-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,23,0.88); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; padding:12px; }
-      .dc-ai-overlay.active { display:flex; }
-      .dc-ai-modal { width:100%; max-width:460px; height:85vh; max-height:680px; background:#171c2b; border:1px solid #2a324b; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.8); font-family:system-ui,-apple-system,sans-serif; color:#f1f5f9; }
-      .dc-ai-header { background:#1e2538; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2a324b; gap:8px; }
-      .dc-ai-title { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; }
-      .dc-ai-badge { background:#fca5a5; color:#7f1d1d; padding:4px 7px; border-radius:8px; font-size:13px; }
-      .dc-header-actions { display:flex; align-items:center; gap:6px; }
-      .dc-lang-select { background:#2a324b; color:#f1f5f9; border:1px solid #3b4668; border-radius:8px; padding:4px 6px; font-size:12px; outline:none; cursor:pointer; }
-      .dc-icon-btn { background:#2a324b; border:none; color:#cbd5e1; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
-      .dc-icon-btn:hover { background:#3b4668; color:#fff; }
-      .dc-chat-body { flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
-      .dc-msg-wrap { display:flex; flex-direction:column; max-width:85%; }
-      .dc-msg-wrap.user { align-self:flex-end; align-items:flex-end; }
-      .dc-msg-wrap.ai { align-self:flex-start; align-items:flex-start; }
-      .dc-msg { padding:11px 14px; border-radius:14px; font-size:14px; line-height:1.55; word-wrap:break-word; white-space:pre-wrap; }
-      .dc-ai { background:#232b42; color:#e2e8f0; border-bottom-left-radius:4px; }
-      .dc-ai a { color:#f87171; text-decoration:underline; font-weight:600; }
-      .dc-user { background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; border-bottom-right-radius:4px; }
-      .dc-copy-btn { background:transparent; border:none; color:#94a3b8; font-size:11px; cursor:pointer; margin-top:4px; padding:2px 6px; }
-      .dc-copy-btn:hover { color:#f87171; }
-      .dc-preview-bar { display:none; padding:8px 16px; background:#1e2538; border-top:1px solid #2a324b; align-items:center; justify-content:space-between; font-size:12px; color:#93c5fd; }
-      .dc-preview-bar.active { display:flex; }
-      .dc-chips { display:flex; gap:8px; padding:8px 14px; overflow-x:auto; background:#171c2b; scrollbar-width:none; }
-      .dc-chips::-webkit-scrollbar { display:none; }
-      .dc-chip { background:#232b42; border:1px solid #334155; color:#93c5fd; padding:6px 12px; border-radius:20px; font-size:12px; white-space:nowrap; cursor:pointer; }
-      .dc-input-box { display:flex; align-items:center; padding:10px 12px; background:#131722; border-top:1px solid #2a324b; gap:6px; }
-      .dc-tool-btn { background:#1e2538; border:1px solid #2a324b; color:#cbd5e1; width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-      .dc-tool-btn.recording { background:#ef4444; color:white; animation:dcPulse 1s infinite; }
-      @keyframes dcPulse { 0%{opacity:1;} 50%{opacity:0.5;} 100%{opacity:1;} }
-      .dc-input-box input[type="text"] { flex:1; background:#1e2538; border:1px solid #2a324b; color:#fff; padding:10px 12px; border-radius:10px; font-size:14px; outline:none; min-width:0; }
-      .dc-send-btn { background:#f87171; color:#111827; border:none; height:38px; padding:0 16px; border-radius:10px; font-weight:700; cursor:pointer; flex-shrink:0; }
-      .dc-send-btn:disabled { opacity:0.5; }
-    `;
-    document.head.appendChild(style);
-
-    // Floating Button to Open AI Chat
-    const floatBtn = document.createElement("button");
-    floatBtn.className = "dc-floating-trigger";
-    floatBtn.id = "dcFloatingTrigger";
-    floatBtn.innerHTML = `<span>🤖</span><span>Ask AI</span>`;
-    floatBtn.onclick = () => window.toggleDcAssistant(true);
-    document.body.appendChild(floatBtn);
-
-    // Inject Modal HTML
-    const modalWrapper = document.createElement("div");
-    modalWrapper.innerHTML = `
-      <div class="dc-ai-overlay" id="dcAiOverlay">
-        <div class="dc-ai-modal">
-          <div class="dc-ai-header">
-            <div class="dc-ai-title">
-              <span class="dc-ai-badge">🤖</span>
-              <span>DocuCraft AI</span>
-            </div>
-            <div class="dc-header-actions">
-              <select id="dcVoiceLang" class="dc-lang-select" title="Voice Input Language">
-                <option value="en-IN" selected>English</option>
-                <option value="bn-IN">Bengali</option>
-                <option value="hi-IN">Hindi</option>
-                <option value="es-ES">Spanish</option>
-                <option value="ar-SA">Arabic</option>
-              </select>
-              <button class="dc-icon-btn" title="Clear Chat" onclick="clearDcChat()">🗑️</button>
-              <button class="dc-icon-btn" title="Close" onclick="toggleDcAssistant(false)">✕</button>
-            </div>
-          </div>
-
-          <div class="dc-chat-body" id="dcChatBody">
-            <div class="dc-msg-wrap ai">
-              <div class="dc-msg dc-ai">Hello! Ask me anything in any language—DocuCraft PDF & Image tools, coding, writing, math, or real-time internet search!</div>
-            </div>
-          </div>
-
-          <div class="dc-preview-bar" id="dcPreviewBar">
-            <span id="dcFileName">📎 Image attached</span>
-            <button onclick="removeDcFile()" style="background:none;border:none;color:#f87171;cursor:pointer;font-weight:bold;">✕ Remove</button>
-          </div>
-
-          <div class="dc-chips">
-            <button class="dc-chip" onclick="quickAsk('Show all DocuCraft AI tools with links')">🛠️ All Tools</button>
-            <button class="dc-chip" onclick="quickAsk('How do I compress or merge a PDF?')">📄 PDF Help</button>
-            <button class="dc-chip" onclick="quickAsk('Write a professional email')">✍️ AI Writer</button>
-            <button class="dc-chip" onclick="quickAsk('What is the latest tech news today?')">🌐 Internet Search</button>
-          </div>
-
-          <div class="dc-input-box">
-            <input type="file" id="dcFileInput" accept="image/*" style="display:none" onchange="handleDcFile(event)">
-            <button class="dc-tool-btn" title="Upload Image" onclick="document.getElementById('dcFileInput').click()">📎</button>
-            <button class="dc-tool-btn" id="dcMicBtn" title="Voice Input" onclick="startDcVoice()">🎤</button>
-            <input type="text" id="dcUserInput" placeholder="Ask anything in any language..." onkeypress="if(event.key==='Enter') sendDcMessage()">
-            <button class="dc-send-btn" id="dcSendBtn" onclick="sendDcMessage()">Send</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modalWrapper);
-  }
-
-  let chatHistory = [];
-  let attachedImageBase64 = null;
-  let attachedImageMime = null;
-
-  window.toggleDcAssistant = function (show) {
-    initChatWidget();
-    const overlay = document.getElementById("dcAiOverlay");
-    if (show) {
-      overlay.classList.add("active");
-      document.getElementById("dcUserInput").focus();
-    } else {
-      overlay.classList.remove("active");
-    }
-  };
-
-  window.clearDcChat = function () {
-    chatHistory = [];
-    document.getElementById("dcChatBody").innerHTML = `
-      <div class="dc-msg-wrap ai">
-        <div class="dc-msg dc-ai">Chat cleared! Ask me anything in any language.</div>
-      </div>`;
-  };
-
-  window.quickAsk = function (question) {
-    document.getElementById("dcUserInput").value = question;
-    sendDcMessage();
-  };
-
-  window.handleDcFile = function (event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      attachedImageBase64 = e.target.result.split(",")[1];
-      attachedImageMime = file.type;
-      document.getElementById("dcFileName").innerText = "📎 " + file.name;
-      document.getElementById("dcPreviewBar").classList.add("active");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  window.removeDcFile = function () {
-    attachedImageBase64 = null;
-    attachedImageMime = null;
-    document.getElementById("dcFileInput").value = "";
-    document.getElementById("dcPreviewBar").classList.remove("active");
-  };
-
-  window.startDcVoice = function () {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser.");
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    const micBtn = document.getElementById("dcMicBtn");
-    recognition.lang = document.getElementById("dcVoiceLang").value;
-    micBtn.classList.add("recording");
-
-    recognition.onresult = (event) => {
-      document.getElementById("dcUserInput").value = event.results[0][0].transcript;
-      micBtn.classList.remove("recording");
-    };
-    recognition.onerror = () => micBtn.classList.remove("recording");
-    recognition.onend = () => micBtn.classList.remove("recording");
-    recognition.start();
-  };
-
-  function formatResponse(text) {
-    const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-  }
-
-  window.sendDcMessage = async function () {
-    const input = document.getElementById("dcUserInput");
-    const btn = document.getElementById("dcSendBtn");
-    const text = input.value.trim();
-    if (!text && !attachedImageBase64) return;
-
-    const displayUserText = attachedImageBase64 ? `📎 [Image Attached]\n${text}` : text;
-    addDcMsg(displayUserText, "user");
-
-    const userParts = [];
-    if (text) userParts.push({ text: text });
-    if (attachedImageBase64) {
-      userParts.push({ inline_data: { mime_type: attachedImageMime, data: attachedImageBase64 } });
-    }
-
-    chatHistory.push({ role: "user", parts: userParts });
-    input.value = "";
-    removeDcFile();
-    btn.disabled = true;
-
-    const loadId = "dc-load-" + Date.now();
-    addDcMsg("Thinking...", "ai", loadId);
-
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: chatHistory,
-          tools: [{ google_search: {} }]
-        })
-      });
-
-      const data = await res.json();
-      document.getElementById(loadId)?.remove();
-
-      if (data.error) {
-        addDcMsg(`API Error: ${data.error.message}`, "ai");
-        chatHistory.pop();
-        return;
-      }
-
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received from AI.";
-      chatHistory.push({ role: "model", parts: [{ text: reply }] });
-      addDcMsg(reply, "ai");
-    } catch (e) {
-      document.getElementById(loadId)?.remove();
-      addDcMsg("Network error. Please check your connection and try again.", "ai");
-      chatHistory.pop();
-    } finally {
-      btn.disabled = false;
-    }
-  };
-
-  function addDcMsg(text, sender, id = "") {
-    const box = document.getElementById("dcChatBody");
-    const wrap = document.createElement("div");
-    wrap.className = `dc-msg-wrap ${sender}`;
-    if (id) wrap.id = id;
-
-    const div = document.createElement("div");
-    div.className = `dc-msg dc-${sender}`;
-    if (sender === "ai") {
-      div.innerHTML = formatResponse(text);
-    } else {
-      div.innerText = text;
-    }
-    wrap.appendChild(div);
-
-    if (sender === "ai" && !id) {
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "dc-copy-btn";
-      copyBtn.innerText = "📋 Copy";
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(text);
-        copyBtn.innerText = "✅ Copied!";
-        setTimeout(() => (copyBtn.innerText = "📋 Copy"), 1500);
-      };
-      wrap.appendChild(copyBtn);
-    }
-
-    box.appendChild(wrap);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initChatWidget);
-  } else {
-    initChatWidget();
-  }
-})();
