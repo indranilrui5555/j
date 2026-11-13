@@ -130,6 +130,10 @@ function launchTool(toolKey) {
       fileInput.accept = '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation';
     } else if (toolKey === 'htmlToPdf') {
       fileInput.accept = '.html,.htm,text/html';
+    } else if (toolKey === 'textToPdf') {
+      fileInput.accept = '.txt,text/plain';
+    } else if (toolKey === 'zipToPdf') {
+      fileInput.accept = '.zip,application/zip';
     } else {
       fileInput.accept = '*/*';
     }
@@ -441,6 +445,18 @@ function launchTool(toolKey) {
           <input type="text" id="optWatermark" class="form-control" value="CONFIDENTIAL" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
+  } else if (toolKey === 'zipToPdf') {
+    if (title) title.innerText = 'ZIP to PDF Converter';
+    if (desc) desc.innerText = 'Extract images from a ZIP file and convert them into a single PDF.';
+    if (dropText) dropText.innerText = 'Tap to select ZIP archive';
+  } else if (toolKey === 'textToPdf') {
+    if (title) title.innerText = 'Text to PDF';
+    if (desc) desc.innerText = 'Create clean PDF documents from plain text files.';
+    if (dropText) dropText.innerText = 'Tap to select TXT file';
+  } else if (toolKey === 'htmlToPdf') {
+    if (title) title.innerText = 'HTML to PDF';
+    if (desc) desc.innerText = 'Convert HTML text content or web markup directly into PDF.';
+    if (dropText) dropText.innerText = 'Tap to select HTML file';
   } else {
     let formattedTitle = toolKey;
     const lowerKey = toolKey.toLowerCase();
@@ -454,6 +470,7 @@ function launchTool(toolKey) {
     else if (lowerKey === 'ppttopdf') formattedTitle = 'PowerPoint to PDF';
     else if (lowerKey === 'htmltopdf') formattedTitle = 'HTML to PDF';
     else if (lowerKey === 'texttopdf') formattedTitle = 'Text to PDF';
+    else if (lowerKey === 'ziptopdf') formattedTitle = 'ZIP to PDF';
     else {
       formattedTitle = toolKey.replace(/([A-Z])/g, ' $1').toUpperCase();
     }
@@ -851,7 +868,7 @@ async function executeToolAction() {
     return;
   }
 
-  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers'];
+  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf'];
   if (fileNeeded.includes(activeTool) && selectedFiles.length === 0) {
     alert('Please tap to select the required file(s) first.');
     return;
@@ -1265,6 +1282,63 @@ async function executeToolAction() {
       downloadBlob(await doc.save(), 'Watermarked_Document.pdf', 'application/pdf');
       showSuccessPopup('Watermark Added Successfully!');
 
+    } else if (activeTool === 'textToPdf') {
+      setProgress(30, 'Reading text file...');
+      const text = await selectedFiles[0].text();
+      const jsPdfLib = await ensureJsPdfLoaded();
+      const { jsPDF } = jsPdfLib || window.jspdf;
+      const pdf = new jsPDF();
+      const splitText = pdf.splitTextToSize(text, 180);
+      pdf.text(splitText, 15, 15);
+      downloadBlob(pdf.output('blob'), 'Converted_Text.pdf', 'application/pdf');
+      showSuccessPopup('Text Converted to PDF Successfully!');
+
+    } else if (activeTool === 'htmlToPdf') {
+      setProgress(30, 'Reading HTML file...');
+      const htmlText = await selectedFiles[0].text();
+      const jsPdfLib = await ensureJsPdfLoaded();
+      const { jsPDF } = jsPdfLib || window.jspdf;
+      const pdf = new jsPDF();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlText;
+      const plainText = tempDiv.innerText || tempDiv.textContent; 
+      const splitText = pdf.splitTextToSize(plainText, 180);
+      pdf.text(splitText, 15, 15);
+      downloadBlob(pdf.output('blob'), 'Converted_HTML.pdf', 'application/pdf');
+      showSuccessPopup('HTML Converted to PDF Successfully!');
+
+    } else if (activeTool === 'zipToPdf') {
+      setProgress(30, 'Loading ZIP extractor...');
+      let JSZip = window.JSZip;
+      if (!JSZip) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        JSZip = window.JSZip;
+      }
+      setProgress(50, 'Extracting images from ZIP...');
+      const zip = new JSZip();
+      const loadedZip = await zip.loadAsync(selectedFiles[0]);
+      const jsPdfLib = await ensureJsPdfLoaded();
+      const { jsPDF } = jsPdfLib || window.jspdf;
+      const pdf = new jsPDF();
+      let pageAdded = false;
+
+      for (const [filename, fileData] of Object.entries(loadedZip.files)) {
+        if (!fileData.dir && filename.match(/\.(jpg|jpeg|png|webp)$/i)) {
+          const blob = await fileData.async('blob');
+          const imgData = await readFileAsDataURL(blob);
+          if (pageAdded) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 10, 10, 190, 277);
+          pageAdded = true;
+        }
+      }
+      if (!pageAdded) { alert('No valid images found in the ZIP archive!'); return; }
+      setProgress(90, 'Generating PDF...');
+      downloadBlob(pdf.output('blob'), 'ZIP_to_PDF.pdf', 'application/pdf');
+      showSuccessPopup('ZIP Images Converted to PDF!');
+
+    } else if (['wordToPdf', 'excelToPdf', 'pptToPdf'].includes(activeTool)) {
+      alert('Note: Pure offline conversion for Word/Excel/PPT requires premium server-side APIs to maintain formatting. This feature is coming in the next update!');
+      
     } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf' || activeTool === 'webpToPdf') {
       const jsPdfLib = await ensureJsPdfLoaded();
       const { jsPDF } = jsPdfLib || window.jspdf;
@@ -1378,6 +1452,7 @@ function downloadBlob(content, name, mimeType = 'application/octet-stream') {
     window.URL.revokeObjectURL(url);
   }, 60000);
 }
+
 function updatePrivacyStatus() {
   const statusTag = document.getElementById('network-status');
   if (!statusTag) return;
