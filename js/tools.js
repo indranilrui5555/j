@@ -118,9 +118,9 @@ function launchTool(toolKey) {
 
   if (fileInput) {
     fileInput.value = '';
-    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'pdfToJpg', 'pdfToWord', 'pdfToExcel', 'editPdf'].includes(toolKey)) {
+    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'addPageNumbers', 'pdfToJpg', 'pdfToWord', 'pdfToExcel', 'editPdf'].includes(toolKey)) {
       fileInput.accept = '.pdf,application/pdf';
-    } else if (['jpgToPdf', 'pngToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
+    } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
       fileInput.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
     } else if (toolKey === 'wordToPdf') {
       fileInput.accept = '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -134,7 +134,7 @@ function launchTool(toolKey) {
       fileInput.accept = '*/*';
     }
 
-    if (['merge', 'jpgToPdf', 'pngToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'htmlToPdf'].includes(toolKey)) {
+    if (['merge', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'htmlToPdf'].includes(toolKey)) {
       fileInput.setAttribute('multiple', 'true');
     } else {
       fileInput.removeAttribute('multiple');
@@ -302,6 +302,37 @@ function launchTool(toolKey) {
           </div>
         </div>`;
     }
+  } else if (toolKey === 'unlock') {
+    if (title) title.innerText = 'Unlock PDF';
+    if (desc) desc.innerText = 'Remove owner passwords and editing restrictions securely from your PDF.';
+    if (dropText) dropText.innerText = 'Tap to select locked PDF';
+    if (customUI) {
+      customUI.innerHTML = `
+        <div class="form-group" style="margin-top:10px;">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Save File Name:</label>
+          <input type="text" id="optUnlockFileName" class="form-control" value="Unlocked_Document" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+        </div>`;
+    }
+  } else if (toolKey === 'addPageNumbers') {
+    if (title) title.innerText = 'Add Page Numbers';
+    if (desc) desc.innerText = 'Automatically insert page numbers into your PDF file.';
+    if (dropText) dropText.innerText = 'Tap to select PDF';
+    if (customUI) {
+      customUI.innerHTML = `
+        <div class="form-group">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Number Position:</label>
+          <select id="optPageNumPos" class="form-control" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+            <option value="bottom-center" selected>Bottom Center</option>
+            <option value="bottom-right">Bottom Right</option>
+            <option value="top-center">Top Center</option>
+            <option value="top-right">Top Right</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Save File Name:</label>
+          <input type="text" id="optPageNumFileName" class="form-control" value="Numbered_Document" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+        </div>`;
+    }
   } else if (toolKey === 'merge') {
     if (title) title.innerText = 'Merge PDF';
     if (desc) desc.innerText = 'Select multiple PDF files to combine. Order can be rearranged.';
@@ -376,9 +407,9 @@ function launchTool(toolKey) {
           <input type="text" id="optDeleteRange" class="form-control" placeholder="e.g., 2, 4" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
-  } else if (toolKey === 'jpgToPdf' || toolKey === 'pngToPdf') {
+  } else if (toolKey === 'jpgToPdf' || toolKey === 'pngToPdf' || toolKey === 'webpToPdf') {
     if (title) title.innerText = 'Image to PDF Converter';
-    if (desc) desc.innerText = 'Convert your image files into a clean PDF with proper sizing.';
+    if (desc) desc.innerText = 'Convert JPG, PNG, or WebP images into a clean PDF with proper sizing.';
     if (dropText) dropText.innerText = 'Tap to select image file(s)';
     if (customUI) {
       customUI.innerHTML = `
@@ -820,7 +851,7 @@ async function executeToolAction() {
     return;
   }
 
-  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'watermark'];
+  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers'];
   if (fileNeeded.includes(activeTool) && selectedFiles.length === 0) {
     alert('Please tap to select the required file(s) first.');
     return;
@@ -1083,6 +1114,41 @@ async function executeToolAction() {
       downloadBlob(bestBlob, `${fileName}.jpg`, 'image/jpeg');
       showSuccessPopup('Exam Document Resized Successfully!');
 
+    } else if (activeTool === 'unlock' && PDFLibObj) {
+      setProgress(40, 'Removing PDF restrictions...');
+      const customName = document.getElementById('optUnlockFileName')?.value?.trim() || 'Unlocked_Document';
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+      const unlockedBytes = await doc.save();
+      downloadBlob(unlockedBytes, `${customName}.pdf`, 'application/pdf');
+      showSuccessPopup('PDF Unlocked Successfully!');
+
+    } else if (activeTool === 'addPageNumbers' && PDFLibObj) {
+      setProgress(40, 'Adding Page Numbers...');
+      const customName = document.getElementById('optPageNumFileName')?.value?.trim() || 'Numbered_Document';
+      const pos = document.getElementById('optPageNumPos')?.value || 'bottom-center';
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+      
+      const pages = doc.getPages();
+      pages.forEach((page, idx) => {
+        const { width, height } = page.getSize();
+        const text = String(idx + 1);
+        const size = 12;
+        let x = width / 2;
+        let y = 20;
+        
+        if (pos === 'bottom-right') { x = width - 30; }
+        else if (pos === 'top-center') { y = height - 30; }
+        else if (pos === 'top-right') { x = width - 30; y = height - 30; }
+        
+        page.drawText(text, { x, y, size, color: PDFLibObj.rgb(0, 0, 0) });
+      });
+      
+      const numberedBytes = await doc.save();
+      downloadBlob(numberedBytes, `${customName}.pdf`, 'application/pdf');
+      showSuccessPopup('Page Numbers Added Successfully!');
+
     } else if (activeTool === 'merge' && PDFLibObj) {
       setProgress(20, 'Combining PDF files...');
       const customName = document.getElementById('optMergeFileName')?.value?.trim() || 'Merged_Document';
@@ -1090,7 +1156,7 @@ async function executeToolAction() {
 
       for (let i = 0; i < selectedFiles.length; i++) {
         const fileBuffer = await selectedFiles[i].arrayBuffer();
-        const doc = await PDFLibObj.PDFDocument.load(fileBuffer);
+        const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
         const copiedPages = await mergedPdf.copyPages(doc, doc.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
       }
@@ -1199,7 +1265,7 @@ async function executeToolAction() {
       downloadBlob(await doc.save(), 'Watermarked_Document.pdf', 'application/pdf');
       showSuccessPopup('Watermark Added Successfully!');
 
-    } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf') {
+    } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf' || activeTool === 'webpToPdf') {
       const jsPdfLib = await ensureJsPdfLoaded();
       const { jsPDF } = jsPdfLib || window.jspdf;
 
