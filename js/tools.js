@@ -88,8 +88,31 @@ function openCustomModal(modalId) {
   } catch (e) {}
 }
 
-function launchTool(toolKey) {
-  if (toolKey === 'rot') toolKey = 'rotate';
+function launchTool(rawToolKey) {
+  // Smart Normalizer to fix HTML toolKey names and missing "to"
+  let toolKey = rawToolKey;
+  if (typeof toolKey === 'string') {
+    const tk = toolKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const keyMap = {
+      'rot': 'rotate',
+      'jpgpdf': 'jpgToPdf', 'jpgtopdf': 'jpgToPdf',
+      'pngpdf': 'pngToPdf', 'pngtopdf': 'pngToPdf',
+      'webppdf': 'webpToPdf', 'webptopdf': 'webpToPdf',
+      'wordpdf': 'wordToPdf', 'wordtopdf': 'wordToPdf', 'docpdf': 'wordToPdf', 'docxpdf': 'wordToPdf',
+      'excelpdf': 'excelToPdf', 'exceltopdf': 'excelToPdf', 'xlspdf': 'excelToPdf',
+      'pptpdf': 'pptToPdf', 'ppttopdf': 'pptToPdf',
+      'htmlpdf': 'htmlToPdf', 'htmltopdf': 'htmlToPdf',
+      'textpdf': 'textToPdf', 'texttopdf': 'textToPdf', 'txtpdf': 'textToPdf',
+      'zippdf': 'zipToPdf', 'ziptopdf': 'zipToPdf',
+      'pdfword': 'pdfToWord',
+      'pdfexcel': 'pdfToExcel',
+      'pdfppt': 'pdfToPpt',
+      'pdfjpg': 'pdfToJpg',
+      'pdfpng': 'pdfToPng',
+      'pdftext': 'pdfToText'
+    };
+    if (keyMap[tk]) toolKey = keyMap[tk];
+  }
 
   if (typeof checkUserAccess === 'function' && !checkUserAccess(toolKey)) {
     return;
@@ -162,6 +185,15 @@ function launchTool(toolKey) {
       history.pushState({ modalOpen: true }, '', window.location.href);
     }
   }
+
+  // Predefined beautiful titles
+  const titleMap = {
+    'jpgToPdf': 'JPG to PDF', 'pngToPdf': 'PNG to PDF', 'webpToPdf': 'WebP to PDF',
+    'wordToPdf': 'Word to PDF', 'excelToPdf': 'Excel to PDF', 'pptToPdf': 'PowerPoint to PDF',
+    'htmlToPdf': 'HTML to PDF', 'textToPdf': 'Text to PDF', 'zipToPdf': 'ZIP to PDF',
+    'pdfToWord': 'PDF to Word', 'pdfToExcel': 'PDF to Excel', 'pdfToPpt': 'PDF to PowerPoint',
+    'pdfToJpg': 'PDF to JPG', 'pdfToPng': 'PDF to PNG', 'pdfToText': 'PDF to Text'
+  };
 
   if (toolKey === 'sigPad') {
     if (title) title.innerText = 'Digital Signature Maker';
@@ -411,9 +443,9 @@ function launchTool(toolKey) {
           <input type="text" id="optDeleteRange" class="form-control" placeholder="e.g., 2, 4" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
-  } else if (toolKey === 'jpgToPdf' || toolKey === 'pngToPdf' || toolKey === 'webpToPdf') {
-    if (title) title.innerText = 'Image to PDF Converter';
-    if (desc) desc.innerText = 'Convert JPG, PNG, or WebP images into a clean PDF with proper sizing.';
+  } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf'].includes(toolKey)) {
+    if (title) title.innerText = titleMap[toolKey] || 'Image to PDF';
+    if (desc) desc.innerText = 'Convert images into a clean PDF with proper sizing.';
     if (dropText) dropText.innerText = 'Tap to select image file(s)';
     if (customUI) {
       customUI.innerHTML = `
@@ -446,36 +478,19 @@ function launchTool(toolKey) {
         </div>`;
     }
   } else if (toolKey === 'zipToPdf') {
-    if (title) title.innerText = 'ZIP to PDF Converter';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Extract images from a ZIP file and convert them into a single PDF.';
     if (dropText) dropText.innerText = 'Tap to select ZIP archive';
   } else if (toolKey === 'textToPdf') {
-    if (title) title.innerText = 'Text to PDF';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Create clean PDF documents from plain text files.';
     if (dropText) dropText.innerText = 'Tap to select TXT file';
   } else if (toolKey === 'htmlToPdf') {
-    if (title) title.innerText = 'HTML to PDF';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Convert HTML text content or web markup directly into PDF.';
     if (dropText) dropText.innerText = 'Tap to select HTML file';
   } else {
-    let formattedTitle = toolKey;
-    const lowerKey = toolKey.toLowerCase();
-    if (lowerKey === 'pdfexcel') formattedTitle = 'PDF to Excel';
-    else if (lowerKey === 'pdftext') formattedTitle = 'PDF to Text';
-    else if (lowerKey === 'pdfword') formattedTitle = 'PDF to Word';
-    else if (lowerKey === 'pdfjpg') formattedTitle = 'PDF to JPG';
-    else if (lowerKey === 'pdfpng') formattedTitle = 'PDF to PNG';
-    else if (lowerKey === 'wordtopdf') formattedTitle = 'Word to PDF';
-    else if (lowerKey === 'exceltopdf') formattedTitle = 'Excel to PDF';
-    else if (lowerKey === 'ppttopdf') formattedTitle = 'PowerPoint to PDF';
-    else if (lowerKey === 'htmltopdf') formattedTitle = 'HTML to PDF';
-    else if (lowerKey === 'texttopdf') formattedTitle = 'Text to PDF';
-    else if (lowerKey === 'ziptopdf') formattedTitle = 'ZIP to PDF';
-    else {
-      formattedTitle = toolKey.replace(/([A-Z])/g, ' $1').toUpperCase();
-    }
-
-    if (title) title.innerText = formattedTitle;
+    if (title) title.innerText = titleMap[toolKey] || toolKey.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase());
     if (desc) desc.innerText = 'Process your document instantly.';
     if (dropText) dropText.innerText = 'Tap to select file(s)';
   }
@@ -868,7 +883,7 @@ async function executeToolAction() {
     return;
   }
 
-  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf'];
+  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf'];
   if (fileNeeded.includes(activeTool) && selectedFiles.length === 0) {
     alert('Please tap to select the required file(s) first.');
     return;
