@@ -1268,3 +1268,11 @@ function downloadBlob(content, name, mimeType = 'application/octet-stream') {
     window.URL.revokeObjectURL(url);
   }, 60000);
 }
+function updatePrivacyStatus() {
+  const statusTag = document.getElementById('network-status');
+  if (!statusTag) return;
+  statusTag.textContent = navigator.onLine ? 'Device-Only Mode' : 'Offline Mode Active ✓';
+}
+window.addEventListener('online', updatePrivacyStatus);
+window.addEventListener('offline', updatePrivacyStatus);
+updatePrivacyStatus();
