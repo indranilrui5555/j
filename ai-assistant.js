@@ -92,7 +92,11 @@ function showCenterAICard(userQuery, aiReply, toolName = '', targetUrl = '') {
     modal.style.fontFamily = 'system-ui, -apple-system, sans-serif';
     modal.style.opacity = '0';
     modal.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-
+<div class="privacy-badge">
+  <span class="shield-icon">🔒</span>
+  <span><strong>100% Local Browser Processing</strong> — Zero Server Uploads</span>
+  <span id="network-status" class="status-tag">Ready</span>
+</div>
     modal.innerHTML = `
       <div style="display: flex; justify-content: center; margin-bottom: 12px;">
         <div id="aiOrb" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); animation: aiPulse 1.8s infinite ease-in-out;"></div>
