@@ -121,7 +121,6 @@ function launchTool(toolKey) {
     if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'pdfToJpg', 'pdfToWord', 'pdfToExcel', 'editPdf'].includes(toolKey)) {
       fileInput.accept = '.pdf,application/pdf';
     } else if (['jpgToPdf', 'pngToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
-      // Bypass slow Android Google Photos cloud picker for instant (<0.2s) local file selection
       fileInput.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
     } else if (toolKey === 'wordToPdf') {
       fileInput.accept = '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -326,11 +325,15 @@ function launchTool(toolKey) {
         </div>`;
     }
   } else if (toolKey === 'compress') {
-    if (title) title.innerText = 'Optimize / Compact PDF';
-    if (desc) desc.innerText = 'Streamline document data and remove redundant streams.';
+    if (title) title.innerText = 'Compress / Reduce PDF Size';
+    if (desc) desc.innerText = 'Reduce PDF file size by selecting the desired quality percentage.';
     if (dropText) dropText.innerText = 'Tap to select PDF';
     if (customUI) {
       customUI.innerHTML = `
+        <div class="form-group">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Compression Quality: <span id="qualityValue">50%</span></label>
+          <input type="range" id="optCompressQuality" min="10" max="100" value="50" step="5" style="width:100%; cursor:pointer;" oninput="document.getElementById('qualityValue').innerText = this.value + '%'">
+        </div>
         <div class="form-group" style="margin-top:10px;">
           <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Save File Name:</label>
           <input type="text" id="optCompressFileName" class="form-control" value="Compressed_Document" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
@@ -1096,14 +1099,55 @@ async function executeToolAction() {
       downloadBlob(mergedPdfBytes, `${customName}.pdf`, 'application/pdf');
       showSuccessPopup('PDFs Merged Successfully!');
 
-    } else if (activeTool === 'compress' && PDFLibObj) {
-      setProgress(30, 'Optimizing PDF streams...');
+    } else if (activeTool === 'compress') {
+      setProgress(10, 'Loading PDF for compression...');
       const customName = document.getElementById('optCompressFileName')?.value?.trim() || 'Compressed_Document';
+      const qualityPercentage = parseInt(document.getElementById('optCompressQuality')?.value) || 50;
+      const qualityDecimal = qualityPercentage / 100;
+      
+      const pdfjs = await ensurePdfJsLoaded();
+      const jsPdfLib = await ensureJsPdfLoaded();
+      
+      if (!pdfjs || !jsPdfLib) {
+         throw new Error('Failed to load required PDF libraries.');
+      }
+      
+      const { jsPDF } = jsPdfLib || window.jspdf;
       const fileBuffer = await selectedFiles[0].arrayBuffer();
-      const doc = await PDFLibObj.PDFDocument.load(fileBuffer);
-      const compressedBytes = await doc.save({ useObjectStreams: true });
-      downloadBlob(compressedBytes, `${customName}.pdf`, 'application/pdf');
-      showSuccessPopup('PDF Optimized Successfully!');
+      
+      const loadingTask = pdfjs.getDocument({ data: fileBuffer });
+      const pdfDoc = await loadingTask.promise;
+      const totalPages = pdfDoc.numPages;
+      
+      const newPdf = new jsPDF({ unit: 'pt', orientation: 'portrait' });
+      newPdf.deletePage(1); 
+      
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+          setProgress(20 + Math.floor((pageNum / totalPages) * 70), `Compressing page ${pageNum} of ${totalPages}...`);
+          const page = await pdfDoc.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 }); 
+          
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { alpha: false });
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+          
+          const imgData = canvas.toDataURL('image/jpeg', qualityDecimal);
+          
+          const orientation = viewport.width > viewport.height ? 'landscape' : 'portrait';
+          newPdf.addPage([viewport.width, viewport.height], orientation);
+          newPdf.addImage(imgData, 'JPEG', 0, 0, viewport.width, viewport.height);
+      }
+      
+      setProgress(95, 'Finalizing compressed PDF...');
+      const compressedBlob = newPdf.output('blob');
+      downloadBlob(compressedBlob, `${customName}.pdf`, 'application/pdf');
+      showSuccessPopup('PDF Compressed Successfully!');
 
     } else if (activeTool === 'split' && PDFLibObj) {
       const range = document.getElementById('optRange')?.value.trim();
