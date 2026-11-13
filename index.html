@@ -447,68 +447,24 @@
     <p>Advanced Photo KB Resizer, Unlimited Notepad, Docx to PDF, Govt Job Alerts & Utilities.</p>
   </section>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.getElementById("toolSearchInput");
-    // Targets all tool cards on your page (adjust selector if your cards use a different class)
-    const toolCards = document.querySelectorAll(".tools-grid a, .tools-grid .tool-card");
-
-    if (!searchInput) return;
-
-    // Helper function to handle minor typos (like "marge" -> "merge")
-    function isFuzzyMatch(text, query) {
-        if (text.includes(query)) return true;
-        // Allow 1-character difference for words 4+ characters long
-        if (query.length >= 4) {
-            const words = text.split(/\s+/);
-            for (let word of words) {
-                if (Math.abs(word.length - query.length) <= 1) {
-                    let mismatches = 0;
-                    const len = Math.min(word.length, query.length);
-                    for (let i = 0; i < len; i++) {
-                        if (word[i] !== query[i]) mismatches++;
-                    }
-                    mismatches += Math.abs(word.length - query.length);
-                    if (mismatches <= 1) return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    function filterTools() {
-        const query = searchInput.value.trim().toLowerCase();
-
-        toolCards.forEach((card) => {
-            const cardText = card.textContent.toLowerCase();
-            if (query === "" || isFuzzyMatch(cardText, query)) {
-                card.style.display = ""; // Restores default CSS layout
-            } else {
-                card.style.display = "none";
-            }
-        });
-    }
-
-    // 1. Live filter as you type
-    searchInput.addEventListener("input", filterTools);
-
-    // 2. Trigger filter and scroll to results when pressing Enter
-    searchInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            filterTools();
-
-            // Smoothly scroll down to the first visible matching tool
-            const firstVisible = Array.from(toolCards).find(
-                (card) => card.style.display !== "none"
-            );
-            if (firstVisible) {
-                firstVisible.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-        }
-    });
-});
-</script>
+<!-- Search & Filter Section -->
+<div class="quick-tools-wrapper">
+    <div class="quick-tools-track" id="quickToolsTrack"></div>
+</div>
+<div class="search-wrapper">
+    <!-- Search Bar Inner Box -->
+    <div class="search-box-inner">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="toolSearchInput" class="search-input" placeholder="Search any tool (e.g. Merge PDF, KB Resizer, Govt Jobs)...">
+        
+        <div class="voice-assistant-container">
+            <button type="button" id="voiceSearchBtn" class="voice-btn" onclick="startVoice()" title="Search by voice">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <span id="voice-status" class="voice-tooltip"></span>
+        </div>
+    </div>
+</div>
 
 <!-- Recently Used Tools Section -->
 <section id="recentToolsSection" class="recent-tools-section" style="display: none;">
