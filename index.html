@@ -475,36 +475,14 @@
   <div id="recentToolsGrid" class="recent-tools-grid"></div>
 </section>
 </div>
-<!-- Unlock PDF Tool -->
-<div class="tool-card" data-cat="editing">
-    <div class="tool-icon">
-        <i class="fa-solid fa-unlock-keyhole"></i> <!-- You can change this icon class based on your website's UI -->
-    </div>
-    <h3>Unlock PDF <span class="badge new-badge">NEW</span></h3>
-    <p>Remove owner passwords and editing restrictions securely from your PDF.</p>
-    <a href="javascript:void(0);" onclick="launchTool('unlock')" class="open-tool-link">Open Tool &rarr;</a>
-</div>
-
-<!-- Add Page Numbers Tool -->
-<div class="tool-card" data-cat="editing">
-    <div class="tool-icon">
-        <i class="fa-solid fa-list-ol"></i>
-    </div>
-    <h3>Add Page Numbers <span class="badge new-badge">NEW</span></h3>
-    <p>Automatically insert page numbers into your PDF document easily.</p>
-    <a href="javascript:void(0);" onclick="launchTool('addPageNumbers')" class="open-tool-link">Open Tool &rarr;</a>
-</div>
-
-<!-- WebP to PDF Tool -->
-<div class="tool-card" data-cat="convert-to-pdf">
-    <div class="tool-icon">
-        <i class="fa-regular fa-file-image"></i>
-    </div>
-    <h3>WebP to PDF <span class="badge new-badge">NEW</span></h3>
-    <p>Convert WebP images into a clean, formatted PDF document instantly.</p>
-    <a href="javascript:void(0);" onclick="launchTool('webpToPdf')" class="open-tool-link">Open Tool &rarr;</a>
-</div>
-<style>
+<style> 
+/* Container alignment */
+.search-box-inner {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
 /* Ensure text does not overlap with the microphone icon */
 .search-input {
   flex: 1;
