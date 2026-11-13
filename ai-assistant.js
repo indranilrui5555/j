@@ -70,85 +70,43 @@ function initMicAndAiBadge() {
 
 // 3. Center Floating AI Card UI (Mobile & Laptop)
 function showCenterAICard(userQuery, aiReply, toolName = '', targetUrl = '') {
-  let modal = document.getElementById('aiCenterModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'aiCenterModal';
-    modal.style.position = 'fixed';
-    modal.style.top = '50%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
-    modal.style.zIndex = '999999';
-    modal.style.background = 'rgba(15, 23, 42, 0.95)';
-    modal.style.backdropFilter = 'blur(16px)';
-    modal.style.border = '1.5px solid rgba(59, 130, 246, 0.4)';
-    modal.style.borderRadius = '24px';
-    modal.style.padding = '24px 28px';
-    modal.style.boxShadow = '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px rgba(59, 130, 246, 0.35)';
-    modal.style.width = '90%';
-    modal.style.maxWidth = '460px';
-    modal.style.textAlign = 'center';
-    modal.style.color = '#fff';
-    modal.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-    modal.style.opacity = '0';
-    modal.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-<div class="privacy-badge">
-  <span class="shield-icon">🔒</span>
-  <span><strong>100% Local Browser Processing</strong> — Zero Server Uploads</span>
-  <span id="network-status" class="status-tag">Ready</span>
-</div>
-    modal.innerHTML = `
-      <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-        <div id="aiOrb" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); animation: aiPulse 1.8s infinite ease-in-out;"></div>
-      </div>
-      <div id="aiUserText" style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; font-style: italic;"></div>
-      <div id="aiToolHeader" style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;"></div>
-      <div id="aiReplyText" style="font-size: 14.5px; line-height: 1.5; color: #f1f5f9; margin-bottom: 14px;"></div>
-      <div id="aiActionBtnContainer"></div>
-    `;
+  let modal = document.getElementById('aiCenterModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'aiCenterModal';
+    modal.style.position = 'fixed';
+    modal.style.top = '50%';
+    modal.style.left = '50%';
+    modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    modal.style.zIndex = '999999';
+    modal.style.background = 'rgba(15, 23, 42, 0.95)';
+    modal.style.backdropFilter = 'blur(16px)';
+    modal.style.border = '1.5px solid rgba(59, 130, 246, 0.4)';
+    modal.style.borderRadius = '24px';
+    modal.style.padding = '24px 28px';
+    modal.style.boxShadow = '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px rgba(59, 130, 246, 0.35)';
+    modal.style.width = '90%';
+    modal.style.maxWidth = '460px';
+    modal.style.textAlign = 'center';
+    modal.style.color = '#fff';
+    modal.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    modal.style.opacity = '0';
+    modal.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes aiPulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
-        50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(236, 72, 153, 0.8); }
-      }
-    `;
-    document.head.appendChild(style);
-    document.body.appendChild(modal);
-  }
-
-  const userElem = document.getElementById('aiUserText');
-  const toolElem = document.getElementById('aiToolHeader');
-  const replyElem = document.getElementById('aiReplyText');
-  const btnContainer = document.getElementById('aiActionBtnContainer');
-
-  if (userQuery) userElem.innerText = `“${userQuery}”`;
-  toolElem.innerText = toolName || "DocuCraft AI";
-  replyElem.innerText = aiReply;
-
-  if (targetUrl) {
-    btnContainer.innerHTML = `
-      <a href="${targetUrl}" style="display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; text-decoration: none; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(37,99,235,0.4);">
-        এখনই খুলুন →
-      </a>
-    `;
-  } else {
-    btnContainer.innerHTML = '';
-  }
-
-  modal.style.opacity = '1';
-  modal.style.transform = 'translate(-50%, -50%) scale(1)';
-}
-
-function hideCenterAICard() {
-  const modal = document.getElementById('aiCenterModal');
-  if (modal) {
-    modal.style.opacity = '0';
-    modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
-  }
-}
-
+    modal.innerHTML = `
+      <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+        <div id="aiOrb" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); animation: aiPulse 1.8s infinite ease-in-out;"></div>
+      </div>
+      <div id="aiUserText" style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; font-style: italic;"></div>
+      <div id="aiToolHeader" style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;"></div>
+      <div id="aiReplyText" style="font-size: 14.5px; line-height: 1.5; color: #f1f5f9; margin-bottom: 14px;"></div>
+      <div id="aiActionBtnContainer"></div>
+      <div class="privacy-badge" style="margin-top: 14px;">
+        <span class="shield-icon">🔒</span>
+        <span><strong>100% Local Browser Processing</strong> — Zero Server Uploads</span>
+        <span id="network-status" class="status-tag">Ready</span>
+      </div>
+    `;
 // 4. Highlight & Open Card Directly on Page
 function focusAndOpenTool(element, targetUrl = '') {
   const allTab = document.querySelector('.filter-btn[onclick*="all"], button[onclick*="all"]');
