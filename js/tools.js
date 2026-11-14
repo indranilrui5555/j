@@ -908,6 +908,7 @@ async function executeToolAction() {
       const customName = document.getElementById('optCustomFileName')?.value?.trim() || 'Resized_Photo';
       const isMB = (unit === 'MB');
 
+      // Target er thik 98% size set kora hochhe jate konomote limit cross na kore
       const maxAllowedBytes = isMB
         ? Math.floor(valInput * 1000 * 1000 * 0.98)
         : Math.floor(valInput * 1000 * 0.98);
@@ -933,7 +934,7 @@ async function executeToolAction() {
 
       let bestBlob = null;
 
-      // Keeping the image dimensions (resolution) as large as possible to prevent blurriness
+      // Resolution joto ta sombhob boro rakha hochhe jate clear thake
       let maxDim = isMB ? 3500 : (valInput > 150 ? 2500 : (valInput > 50 ? 1800 : 1200));
       let scale = 1;
       const longestSide = Math.max(origW, origH);
@@ -946,43 +947,38 @@ async function executeToolAction() {
       let targetH = Math.round(origH * scale);
       let cv = renderHD(targetW, targetH);
 
-      // Smart Quality Optimization (Binary Search algorithm for the perfect balance)
-      let minQ = 0.10;
-      let maxQ = 0.95;
-      let optimalQ = 0.85; 
+      // Smart Quality Optimization (Binary Search algorithm)
+      let minQ = 0.05;
+      let maxQ = 1.0;
+      let optimalQ = 0.90; 
 
-      let currentBlob = await canvasToBlobFast(cv, optimalQ);
-
-      if (currentBlob.size <= maxAllowedBytes) {
-        let hqBlob = await canvasToBlobFast(cv, 0.95);
-        if (hqBlob.size <= maxAllowedBytes) {
-          bestBlob = await padJpegSafely(hqBlob, maxAllowedBytes);
-        } else {
-          bestBlob = currentBlob; 
-        }
-      } else {
-        // If the size exceeds the allowed limit, it adjusts the JPEG quality 5 times without reducing the image resolution
-        for (let i = 0; i < 5; i++) {
-           if (currentBlob.size > maxAllowedBytes) {
-             maxQ = optimalQ;
-           } else {
-             minQ = optimalQ;
-             bestBlob = currentBlob;
-           }
-           optimalQ = (minQ + maxQ) / 2;
-           currentBlob = await canvasToBlobFast(cv, optimalQ);
-        }
-        
-        // As a final fallback: if the file size is still too large (e.g., extremely low target like 10KB), it gently downscales the dimensions.
-        if (!bestBlob || currentBlob.size > maxAllowedBytes) {
-           let finalScale = Math.sqrt(maxAllowedBytes / currentBlob.size) * 0.92;
-           let finalW = Math.max(300, Math.round(targetW * finalScale));
-           let finalH = Math.max(300, Math.round(finalW / aspect));
-           let finalCv = renderHD(finalW, finalH);
-           bestBlob = await canvasToBlobFast(finalCv, 0.65);
-        } else {
+      for (let i = 0; i < 7; i++) {
+         let currentBlob = await canvasToBlobFast(cv, optimalQ);
+         if (currentBlob.size > maxAllowedBytes) {
+           maxQ = optimalQ;
+         } else {
+           minQ = optimalQ;
            bestBlob = currentBlob;
-        }
+         }
+         optimalQ = (minQ + maxQ) / 2;
+      }
+      
+      // Jodi khub choto KB (jemon 10KB) target thake, tobe fallback use hobe
+      if (!bestBlob) {
+         let probeBlob = await canvasToBlobFast(cv, 0.10);
+         let finalScale = Math.sqrt(maxAllowedBytes / probeBlob.size) * 0.90;
+         let finalW = Math.max(150, Math.round(targetW * finalScale));
+         let finalH = Math.max(150, Math.round(finalW / aspect));
+         let finalCv = renderHD(finalW, finalH);
+         bestBlob = await canvasToBlobFast(finalCv, 0.70);
+         if(bestBlob.size > maxAllowedBytes) {
+             bestBlob = await canvasToBlobFast(finalCv, 0.40);
+         }
+      }
+
+      // THE MAGIC FIX: Sobsomoy file size k perfectly target size er kachakachi (pad) kore dewa hobe!
+      if (bestBlob && bestBlob.size < maxAllowedBytes) {
+          bestBlob = await padJpegSafely(bestBlob, maxAllowedBytes);
       }
 
       if (typeof img.close === 'function') img.close();
