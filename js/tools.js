@@ -89,7 +89,6 @@ function openCustomModal(modalId) {
 }
 
 function launchTool(rawToolKey) {
-  // Smart Normalizer to fix HTML toolKey names and missing "to"
   let toolKey = rawToolKey;
   if (typeof toolKey === 'string') {
     const tk = toolKey.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -186,7 +185,6 @@ function launchTool(rawToolKey) {
     }
   }
 
-  // Predefined beautiful titles
   const titleMap = {
     'jpgToPdf': 'JPG to PDF', 'pngToPdf': 'PNG to PDF', 'webpToPdf': 'WebP to PDF',
     'wordToPdf': 'Word to PDF', 'excelToPdf': 'Excel to PDF', 'pptToPdf': 'PowerPoint to PDF',
@@ -522,7 +520,6 @@ function updateResizerOptions() {
       sizeSelect.appendChild(opt);
     });
   } else {
-    // Exact match according to the provided image!
     const mbValues = [1, 2, 5, 10, 20, 30, 50, 100];
     mbValues.forEach(val => {
       const opt = document.createElement('option');
@@ -762,88 +759,28 @@ async function loadImageFast(file) {
   });
 }
 
-// Zero-Copy Instant JPEG Inflator (<10ms even for 100MB)
-// Etai Magic Pad jeta file size k ekdom exactly apnar dewa limits e set korbe
+// 🔥 ANDROID GALLERY SAFE MAGIC PADDING 🔥
+// This replaces the old padding method that broke mobile galleries
 async function padJpegSafely(blob, targetBytes) {
   if (blob.size >= targetBytes) return blob;
-  const buffer = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
+  let diff = targetBytes - blob.size;
 
-  if (bytes.length < 4 || bytes[0] !== 0xFF || bytes[1] !== 0xD8) {
-    return blob;
-  }
-
-  let sosIdx = -1;
-  let i = 2;
-  while (i < bytes.length - 1) {
-    if (bytes[i] === 0xFF) {
-      let m = bytes[i + 1];
-      while (m === 0xFF && i < bytes.length - 2) {
-        i++;
-        m = bytes[i + 1];
-      }
-      if (m === 0xDA) {
-        sosIdx = i;
-        break;
-      }
-      if (m === 0xD9) break;
-      if (m >= 0xD0 && m <= 0xD7) {
-        i += 2;
-        continue;
-      }
-      if (m === 0x00) {
-        i += 2;
-        continue;
-      }
-      if (i + 3 < bytes.length) {
-        const len = (bytes[i + 2] << 8) | bytes[i + 3];
-        if (len < 2) { i++; continue; }
-        i += 2 + len;
-      } else {
-        break;
-      }
+  // We append raw dummy bytes at the very END of the file (after the JPEG finishes).
+  // The gallery reads the image perfectly and stops, ignoring the extra weight!
+  const chunks = [blob];
+  const chunkData = new Uint8Array(1024 * 1024); // 1MB chunks to save browser RAM
+  
+  while (diff > 0) {
+    if (diff >= 1024 * 1024) {
+      chunks.push(chunkData);
+      diff -= 1024 * 1024;
     } else {
-      i++;
+      chunks.push(new Uint8Array(diff));
+      diff = 0;
     }
   }
-
-  if (sosIdx === -1) sosIdx = 2;
-
-  let diff = targetBytes - bytes.length;
-  if (diff < 5) return blob;
-
-  const fullChunkSize = 65535;
-  const fullLc = fullChunkSize - 2;
-  const fullChunk = new Uint8Array(fullChunkSize);
-  fullChunk[0] = 0xFF;
-  fullChunk[1] = 0xFE;
-  fullChunk[2] = (fullLc >> 8) & 0xFF;
-  fullChunk[3] = fullLc & 0xFF;
-  fullChunk.fill(0x20, 4);
-
-  const count = Math.floor(diff / fullChunkSize);
-  const rem = diff % fullChunkSize;
-
-  const parts = new Array(count + 3);
-  parts[0] = bytes.subarray(0, sosIdx);
-  for (let k = 1; k <= count; k++) {
-    parts[k] = fullChunk;
-  }
-
-  let idx = count + 1;
-  if (rem >= 5) {
-    const remLc = rem - 2;
-    const remChunk = new Uint8Array(rem);
-    remChunk[0] = 0xFF;
-    remChunk[1] = 0xFE;
-    remChunk[2] = (remLc >> 8) & 0xFF;
-    remChunk[3] = remLc & 0xFF;
-    remChunk.fill(0x20, 4);
-    parts[idx++] = remChunk;
-  }
-  parts[idx] = bytes.subarray(sosIdx);
-
-  return new Blob(parts.slice(0, idx + 1), { type: 'image/jpeg' });
+  
+  return new Blob(chunks, { type: 'image/jpeg' });
 }
 
 function canvasToBlobFast(canvas, quality) {
