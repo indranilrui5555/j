@@ -917,6 +917,7 @@ async function executeToolAction() {
       const origH = img.naturalHeight || img.height;
       const aspect = origW / origH;
 
+      // High-quality HD canvas rendering
       function renderHD(w, h) {
         const cv = document.createElement('canvas');
         cv.width = w;
@@ -932,55 +933,55 @@ async function executeToolAction() {
 
       let bestBlob = null;
 
-      if (isMB) {
-        let renderW = origW;
-        let renderH = origH;
-        const maxSide = Math.max(origW, origH);
-        if (maxSide < 2400) {
-          const scale = Math.min(2.5, 2400 / maxSide);
-          renderW = Math.round(origW * scale);
-          renderH = Math.round(origH * scale);
-        }
-        const cv = renderHD(renderW, renderH);
-        const baseBlob = await canvasToBlobFast(cv, 0.96);
-        bestBlob = await padJpegSafely(baseBlob, maxAllowedBytes);
-      } else {
-        const targetPixels = maxAllowedBytes * 4.2;
-        const origPixels = origW * origH;
-        let scale = 1;
-        if (origPixels > targetPixels) {
-          scale = Math.max(0.25, Math.sqrt(targetPixels / origPixels));
-        }
+      // Keeping the image dimensions (resolution) as large as possible to prevent blurriness
+      let maxDim = isMB ? 3500 : (valInput > 150 ? 2500 : (valInput > 50 ? 1800 : 1200));
+      let scale = 1;
+      const longestSide = Math.max(origW, origH);
+      
+      if (longestSide > maxDim) {
+        scale = maxDim / longestSide;
+      }
 
-        let targetW = Math.max(240, Math.round(origW * scale));
-        let targetH = Math.max(240, Math.round(targetW / aspect));
-        if (targetW > origW) {
-          targetW = origW;
-          targetH = origH;
-        }
+      let targetW = Math.round(origW * scale);
+      let targetH = Math.round(origH * scale);
+      let cv = renderHD(targetW, targetH);
 
-        let cv = renderHD(targetW, targetH);
-        let probeBlob = await canvasToBlobFast(cv, 0.85);
+      // Smart Quality Optimization (Binary Search algorithm for the perfect balance)
+      let minQ = 0.10;
+      let maxQ = 0.95;
+      let optimalQ = 0.85; 
 
-        if (probeBlob.size <= maxAllowedBytes) {
-          const hqBlob = await canvasToBlobFast(cv, 0.95);
-          bestBlob = hqBlob.size <= maxAllowedBytes
-            ? await padJpegSafely(hqBlob, maxAllowedBytes)
-            : probeBlob;
+      let currentBlob = await canvasToBlobFast(cv, optimalQ);
+
+      if (currentBlob.size <= maxAllowedBytes) {
+        let hqBlob = await canvasToBlobFast(cv, 0.95);
+        if (hqBlob.size <= maxAllowedBytes) {
+          bestBlob = await padJpegSafely(hqBlob, maxAllowedBytes);
         } else {
-          const ratio = maxAllowedBytes / probeBlob.size;
-          const estQ = Math.max(0.45, Math.min(0.84, Number((0.85 * Math.pow(ratio, 0.85)).toFixed(2))));
-          let secondBlob = await canvasToBlobFast(cv, estQ);
-
-          if (secondBlob.size <= maxAllowedBytes) {
-            bestBlob = secondBlob;
-          } else {
-            const downScale = Math.sqrt(maxAllowedBytes / secondBlob.size) * 0.92;
-            const fbW = Math.max(180, Math.round(targetW * downScale));
-            const fbH = Math.max(180, Math.round(fbW / aspect));
-            const fbCv = renderHD(fbW, fbH);
-            bestBlob = await canvasToBlobFast(fbCv, 0.65);
-          }
+          bestBlob = currentBlob; 
+        }
+      } else {
+        // If the size exceeds the allowed limit, it adjusts the JPEG quality 5 times without reducing the image resolution
+        for (let i = 0; i < 5; i++) {
+           if (currentBlob.size > maxAllowedBytes) {
+             maxQ = optimalQ;
+           } else {
+             minQ = optimalQ;
+             bestBlob = currentBlob;
+           }
+           optimalQ = (minQ + maxQ) / 2;
+           currentBlob = await canvasToBlobFast(cv, optimalQ);
+        }
+        
+        // As a final fallback: if the file size is still too large (e.g., extremely low target like 10KB), it gently downscales the dimensions.
+        if (!bestBlob || currentBlob.size > maxAllowedBytes) {
+           let finalScale = Math.sqrt(maxAllowedBytes / currentBlob.size) * 0.92;
+           let finalW = Math.max(300, Math.round(targetW * finalScale));
+           let finalH = Math.max(300, Math.round(finalW / aspect));
+           let finalCv = renderHD(finalW, finalH);
+           bestBlob = await canvasToBlobFast(finalCv, 0.65);
+        } else {
+           bestBlob = currentBlob;
         }
       }
 
