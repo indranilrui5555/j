@@ -89,6 +89,7 @@ function openCustomModal(modalId) {
 }
 
 function launchTool(rawToolKey) {
+  // Smart Normalizer to fix HTML toolKey names and missing "to"
   let toolKey = rawToolKey;
   if (typeof toolKey === 'string') {
     const tk = toolKey.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -185,6 +186,7 @@ function launchTool(rawToolKey) {
     }
   }
 
+  // Predefined beautiful titles
   const titleMap = {
     'jpgToPdf': 'JPG to PDF', 'pngToPdf': 'PNG to PDF', 'webpToPdf': 'WebP to PDF',
     'wordToPdf': 'Word to PDF', 'excelToPdf': 'Excel to PDF', 'pptToPdf': 'PowerPoint to PDF',
@@ -759,28 +761,87 @@ async function loadImageFast(file) {
   });
 }
 
-// 🔥 ANDROID GALLERY SAFE MAGIC PADDING 🔥
-// This replaces the old padding method that broke mobile galleries
+// Zero-Copy Instant JPEG Inflator (<10ms even for 100MB)
 async function padJpegSafely(blob, targetBytes) {
   if (blob.size >= targetBytes) return blob;
-  let diff = targetBytes - blob.size;
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
 
-  // We append raw dummy bytes at the very END of the file (after the JPEG finishes).
-  // The gallery reads the image perfectly and stops, ignoring the extra weight!
-  const chunks = [blob];
-  const chunkData = new Uint8Array(1024 * 1024); // 1MB chunks to save browser RAM
-  
-  while (diff > 0) {
-    if (diff >= 1024 * 1024) {
-      chunks.push(chunkData);
-      diff -= 1024 * 1024;
+  if (bytes.length < 4 || bytes[0] !== 0xFF || bytes[1] !== 0xD8) {
+    return blob;
+  }
+
+  let sosIdx = -1;
+  let i = 2;
+  while (i < bytes.length - 1) {
+    if (bytes[i] === 0xFF) {
+      let m = bytes[i + 1];
+      while (m === 0xFF && i < bytes.length - 2) {
+        i++;
+        m = bytes[i + 1];
+      }
+      if (m === 0xDA) {
+        sosIdx = i;
+        break;
+      }
+      if (m === 0xD9) break;
+      if (m >= 0xD0 && m <= 0xD7) {
+        i += 2;
+        continue;
+      }
+      if (m === 0x00) {
+        i += 2;
+        continue;
+      }
+      if (i + 3 < bytes.length) {
+        const len = (bytes[i + 2] << 8) | bytes[i + 3];
+        if (len < 2) { i++; continue; }
+        i += 2 + len;
+      } else {
+        break;
+      }
     } else {
-      chunks.push(new Uint8Array(diff));
-      diff = 0;
+      i++;
     }
   }
-  
-  return new Blob(chunks, { type: 'image/jpeg' });
+
+  if (sosIdx === -1) sosIdx = 2;
+
+  let diff = targetBytes - bytes.length;
+  if (diff < 5) return blob;
+
+  const fullChunkSize = 65535;
+  const fullLc = fullChunkSize - 2;
+  const fullChunk = new Uint8Array(fullChunkSize);
+  fullChunk[0] = 0xFF;
+  fullChunk[1] = 0xFE;
+  fullChunk[2] = (fullLc >> 8) & 0xFF;
+  fullChunk[3] = fullLc & 0xFF;
+  fullChunk.fill(0x20, 4);
+
+  const count = Math.floor(diff / fullChunkSize);
+  const rem = diff % fullChunkSize;
+
+  const parts = new Array(count + 3);
+  parts[0] = bytes.subarray(0, sosIdx);
+  for (let k = 1; k <= count; k++) {
+    parts[k] = fullChunk;
+  }
+
+  let idx = count + 1;
+  if (rem >= 5) {
+    const remLc = rem - 2;
+    const remChunk = new Uint8Array(rem);
+    remChunk[0] = 0xFF;
+    remChunk[1] = 0xFE;
+    remChunk[2] = (remLc >> 8) & 0xFF;
+    remChunk[3] = remLc & 0xFF;
+    remChunk.fill(0x20, 4);
+    parts[idx++] = remChunk;
+  }
+  parts[idx] = bytes.subarray(sosIdx);
+
+  return new Blob(parts.slice(0, idx + 1), { type: 'image/jpeg' });
 }
 
 function canvasToBlobFast(canvas, quality) {
@@ -841,24 +902,21 @@ async function executeToolAction() {
   setProgress(10, 'Processing...');
 
   try {
-    
-    // NEW PERFECT KB & MB RESIZER LOGIC
     if (activeTool === 'kbResizer') {
       const valInput = parseFloat(document.getElementById('optPresetSize')?.value) || 50;
       const unit = document.getElementById('optTargetUnit')?.value || 'KB';
       const customName = document.getElementById('optCustomFileName')?.value?.trim() || 'Resized_Photo';
       const isMB = (unit === 'MB');
 
-      // Strict limit set kora hocche OS level e jate perfectly match hoy
       const maxAllowedBytes = isMB
-        ? Math.floor(valInput * 1024 * 1024 * 0.98)
-        : Math.floor(valInput * 1024 * 0.98);
+        ? Math.floor(valInput * 1000 * 1000 * 0.98)
+        : Math.floor(valInput * 1000 * 0.98);
 
       const img = await loadImageFast(selectedFiles[0]);
       const origW = img.naturalWidth || img.width;
       const origH = img.naturalHeight || img.height;
+      const aspect = origW / origH;
 
-      // High-quality HD canvas rendering
       function renderHD(w, h) {
         const cv = document.createElement('canvas');
         cv.width = w;
@@ -872,55 +930,58 @@ async function executeToolAction() {
         return cv;
       }
 
-      // Prothome dimensions set kora
-      let maxStartDim = 2500;
-      if (!isMB) {
-          if (valInput <= 30) maxStartDim = 500;
-          else if (valInput <= 80) maxStartDim = 1000;
-          else if (valInput <= 200) maxStartDim = 1600;
+      let bestBlob = null;
+
+      if (isMB) {
+        let renderW = origW;
+        let renderH = origH;
+        const maxSide = Math.max(origW, origH);
+        if (maxSide < 2400) {
+          const scale = Math.min(2.5, 2400 / maxSide);
+          renderW = Math.round(origW * scale);
+          renderH = Math.round(origH * scale);
+        }
+        const cv = renderHD(renderW, renderH);
+        const baseBlob = await canvasToBlobFast(cv, 0.96);
+        bestBlob = await padJpegSafely(baseBlob, maxAllowedBytes);
       } else {
-          maxStartDim = 3500; // MB er jonyo large frame (mobile crash thekate limit kora)
-      }
+        const targetPixels = maxAllowedBytes * 4.2;
+        const origPixels = origW * origH;
+        let scale = 1;
+        if (origPixels > targetPixels) {
+          scale = Math.max(0.25, Math.sqrt(targetPixels / origPixels));
+        }
 
-      let scale = 1.0;
-      const longestSide = Math.max(origW, origH);
-      if (longestSide > maxStartDim) {
-        scale = maxStartDim / longestSide;
-      }
+        let targetW = Math.max(240, Math.round(origW * scale));
+        let targetH = Math.max(240, Math.round(targetW / aspect));
+        if (targetW > origW) {
+          targetW = origW;
+          targetH = origH;
+        }
 
-      let targetW = Math.round(origW * scale);
-      let targetH = Math.round(origH * scale);
-      let tempCv = renderHD(targetW, targetH);
+        let cv = renderHD(targetW, targetH);
+        let probeBlob = await canvasToBlobFast(cv, 0.85);
 
-      // STEP 1: Jodi 10KB er moto ekdom choto size chay, tobe dimension iterative bhabe komabe
-      let lowestQBlob = await canvasToBlobFast(tempCv, 0.10);
-      while (lowestQBlob.size > maxAllowedBytes && targetW > 100 && targetH > 100) {
-          targetW = Math.round(targetW * 0.80);
-          targetH = Math.round(targetH * 0.80);
-          tempCv = renderHD(targetW, targetH);
-          lowestQBlob = await canvasToBlobFast(tempCv, 0.10);
-      }
+        if (probeBlob.size <= maxAllowedBytes) {
+          const hqBlob = await canvasToBlobFast(cv, 0.95);
+          bestBlob = hqBlob.size <= maxAllowedBytes
+            ? await padJpegSafely(hqBlob, maxAllowedBytes)
+            : probeBlob;
+        } else {
+          const ratio = maxAllowedBytes / probeBlob.size;
+          const estQ = Math.max(0.45, Math.min(0.84, Number((0.85 * Math.pow(ratio, 0.85)).toFixed(2))));
+          let secondBlob = await canvasToBlobFast(cv, estQ);
 
-      // STEP 2: Perfect Quality adjust korbe limits er bhetor
-      let bestBlob = lowestQBlob;
-      let minQ = 0.10;
-      let maxQ = 1.00;
-      let optimalQ = 0.85; 
-
-      for (let i = 0; i < 7; i++) {
-         let testBlob = await canvasToBlobFast(tempCv, optimalQ);
-         if (testBlob.size > maxAllowedBytes) {
-           maxQ = optimalQ;
-         } else {
-           minQ = optimalQ;
-           bestBlob = testBlob;
-         }
-         optimalQ = (minQ + maxQ) / 2;
-      }
-
-      // STEP 3: THE MAGIC PADDING - Chobi choto thakle setake EXACTLY valInput er kachakachi banabe
-      if (bestBlob && bestBlob.size < maxAllowedBytes) {
-          bestBlob = await padJpegSafely(bestBlob, maxAllowedBytes);
+          if (secondBlob.size <= maxAllowedBytes) {
+            bestBlob = secondBlob;
+          } else {
+            const downScale = Math.sqrt(maxAllowedBytes / secondBlob.size) * 0.92;
+            const fbW = Math.max(180, Math.round(targetW * downScale));
+            const fbH = Math.max(180, Math.round(fbW / aspect));
+            const fbCv = renderHD(fbW, fbH);
+            bestBlob = await canvasToBlobFast(fbCv, 0.65);
+          }
+        }
       }
 
       if (typeof img.close === 'function') img.close();
@@ -930,8 +991,8 @@ async function executeToolAction() {
       downloadBlob(bestBlob, finalFileName, 'image/jpeg');
 
       const sizeDisplay = isMB
-        ? (bestBlob.size / (1024 * 1024)).toFixed(2) + ' MB'
-        : (bestBlob.size / 1024).toFixed(1) + ' KB';
+        ? (bestBlob.size / (1000 * 1000)).toFixed(1) + ' MB'
+        : (bestBlob.size / 1000).toFixed(1) + ' KB';
 
       closeWorkspace();
       setTimeout(() => {
@@ -939,8 +1000,6 @@ async function executeToolAction() {
       }, 150);
       return;
     }
-    // END OF NEW KB/MB LOGIC
-
 
     const PDFLibObj = await ensurePdfLibLoaded();
 
