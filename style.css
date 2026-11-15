@@ -10,28 +10,7 @@
   --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 15px 30px -5px rgba(229, 50, 45, 0.3);
 }
-/* Main header container */
-.header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end; /* To align items to the right */
-    gap: 10px; /* Space between the buttons */
-}
 
-/* Love India button style */
-.love-india-btn {
-    display: flex;
-    align-items: center;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    border: none;
-    border-radius: 20px;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    white-space: nowrap; /* Prevent text from wrapping to the next line */
-}
 }
 /* Fixed: Replaced hyphen (-) with asterisk (*) for the universal selector */
 * {
@@ -929,4 +908,42 @@ footer {
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+}
+/* Positioning for the Love India badge and lines */
+.love-india-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  /* Margin adjusted to reduce empty space */
+  margin-top: -5px; 
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Dashed lines on both sides */
+.dashed-line {
+  width: 40px; /* Line width */
+  border-top: 2px dashed #9ca3af; /* Line color and style */
+}
+
+/* Love India badge design */
+.love-india-badge {
+  background: linear-gradient(90deg, #60a5fa, #ec4899); /* Blue to pink gradient */
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 9999px; /* To make it fully rounded */
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3); /* Light glow effect */
+}
+
+/* To remove extra space above the bottom QR section (replace with your QR class name) */
+.qr-code-section { 
+   margin-top: 0;
+   padding-top: 0;
 }
