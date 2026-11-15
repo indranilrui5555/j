@@ -159,14 +159,7 @@
   .action-btn.liked {
     color: #f87171;
   }
-<!-- Install App Section -->
-<div id="installAppContainer" style="display: none; text-align: center; margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-    <h4 style="margin: 0 0 10px 0; font-size: 16px;">Install DocuCraft AI App</h4>
-    <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Get our app on your home screen for a better and faster experience.</p>
-    <button id="installAppBtn" style="background-color: #5b5fc7; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-        Install Now
-    </button>
-</div>
+
   /* Comment Popup Modal */
   .comment-modal {
     display: none;
@@ -630,42 +623,6 @@
         window.location.href = 'intent://' + cleanUrl + '#Intent;scheme=https;package=com.android.chrome;end;';
       }
     })();
-   let deferredPrompt;
-const installAppContainer = document.getElementById('installAppContainer');
-const installAppBtn = document.getElementById('installAppBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Browser er default install popup ta atke dewa
-    e.preventDefault();
-    // Event ta save kore rakha jate pore use kora jay
-    deferredPrompt = e;
-    // Amader custom install section ta show kora
-    installAppContainer.style.display = 'block';
-});
-
-installAppBtn.addEventListener('click', async () => {
-    if (deferredPrompt !== null) {
-        // Install prompt show kora
-        deferredPrompt.prompt();
-        // User accept korlo naki reject korlo seta dekha
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-        } else {
-            console.log('User dismissed the install prompt');
-        }
-        // Ekbar prompt dekhano hole event ta clear kore dewa
-        deferredPrompt = null;
-        installAppContainer.style.display = 'none';
-    }
-});
-
-// App successfully install hoye gele box ta hide kore dewa
-window.addEventListener('appinstalled', () => {
-    installAppContainer.style.display = 'none';
-    deferredPrompt = null;
-    console.log('PWA was installed');
-});
   </script>
 </head>
  <body>
@@ -4973,13 +4930,6 @@ function shareWebsite() {
       '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
     }[tag]));
   }
-</script>
- <script>
- if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js');
-  });
-}
 </script>
   </body>
 </html>
