@@ -88,8 +88,30 @@ function openCustomModal(modalId) {
   } catch (e) {}
 }
 
-function launchTool(toolKey) {
-  if (toolKey === 'rot') toolKey = 'rotate';
+function launchTool(rawToolKey) {
+  let toolKey = rawToolKey;
+  if (typeof toolKey === 'string') {
+    const tk = toolKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const keyMap = {
+      'rot': 'rotate',
+      'jpgpdf': 'jpgToPdf', 'jpgtopdf': 'jpgToPdf',
+      'pngpdf': 'pngToPdf', 'pngtopdf': 'pngToPdf',
+      'webppdf': 'webpToPdf', 'webptopdf': 'webpToPdf',
+      'wordpdf': 'wordToPdf', 'wordtopdf': 'wordToPdf', 'docpdf': 'wordToPdf', 'docxpdf': 'wordToPdf',
+      'excelpdf': 'excelToPdf', 'exceltopdf': 'excelToPdf', 'xlspdf': 'excelToPdf',
+      'pptpdf': 'pptToPdf', 'ppttopdf': 'pptToPdf',
+      'htmlpdf': 'htmlToPdf', 'htmltopdf': 'htmlToPdf',
+      'textpdf': 'textToPdf', 'texttopdf': 'textToPdf', 'txtpdf': 'textToPdf',
+      'zippdf': 'zipToPdf', 'ziptopdf': 'zipToPdf',
+      'pdfword': 'pdfToWord', 'pdftoword': 'pdfToWord',
+      'pdfexcel': 'pdfToExcel', 'pdftoexcel': 'pdfToExcel',
+      'pdfppt': 'pdfToPpt', 'pdftoppt': 'pdfToPpt',
+      'pdfjpg': 'pdfToJpg', 'pdftojpg': 'pdfToJpg',
+      'pdfpng': 'pdfToPng', 'pdftopng': 'pdfToPng',
+      'pdftext': 'pdfToText', 'pdftotext': 'pdfToText'
+    };
+    if (keyMap[tk]) toolKey = keyMap[tk];
+  }
 
   if (typeof checkUserAccess === 'function' && !checkUserAccess(toolKey)) {
     return;
@@ -118,7 +140,7 @@ function launchTool(toolKey) {
 
   if (fileInput) {
     fileInput.value = '';
-    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'addPageNumbers', 'pdfToJpg', 'pdfToWord', 'pdfToExcel', 'editPdf'].includes(toolKey)) {
+    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'addPageNumbers', 'pdfToJpg', 'pdfToPng', 'pdfToWord', 'pdfToExcel', 'pdfToPpt', 'pdfToText', 'editPdf', 'repairPdf'].includes(toolKey)) {
       fileInput.accept = '.pdf,application/pdf';
     } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
       fileInput.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
@@ -149,7 +171,7 @@ function launchTool(toolKey) {
     dropzone.style.display = 'block';
     dropzone.onclick = () => {
       fileInput.click();
-    };
+    }
   }
 
   if (overlay) {
@@ -162,6 +184,15 @@ function launchTool(toolKey) {
       history.pushState({ modalOpen: true }, '', window.location.href);
     }
   }
+
+  const titleMap = {
+    'jpgToPdf': 'JPG to PDF', 'pngToPdf': 'PNG to PDF', 'webpToPdf': 'WebP to PDF',
+    'wordToPdf': 'Word to PDF', 'excelToPdf': 'Excel to PDF', 'pptToPdf': 'PowerPoint to PDF',
+    'htmlToPdf': 'HTML to PDF', 'textToPdf': 'Text to PDF', 'zipToPdf': 'ZIP to PDF',
+    'pdfToWord': 'PDF to Word', 'pdfToExcel': 'PDF to Excel', 'pdfToPpt': 'PDF to PowerPoint',
+    'pdfToJpg': 'PDF to JPG', 'pdfToPng': 'PDF to PNG', 'pdfToText': 'PDF to Text',
+    'editPdf': 'Edit PDF', 'repairPdf': 'Repair PDF'
+  };
 
   if (toolKey === 'sigPad') {
     if (title) title.innerText = 'Digital Signature Maker';
@@ -411,9 +442,9 @@ function launchTool(toolKey) {
           <input type="text" id="optDeleteRange" class="form-control" placeholder="e.g., 2, 4" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
-  } else if (toolKey === 'jpgToPdf' || toolKey === 'pngToPdf' || toolKey === 'webpToPdf') {
-    if (title) title.innerText = 'Image to PDF Converter';
-    if (desc) desc.innerText = 'Convert JPG, PNG, or WebP images into a clean PDF with proper sizing.';
+  } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf'].includes(toolKey)) {
+    if (title) title.innerText = titleMap[toolKey] || 'Image to PDF';
+    if (desc) desc.innerText = 'Convert images into a clean PDF with proper sizing.';
     if (dropText) dropText.innerText = 'Tap to select image file(s)';
     if (customUI) {
       customUI.innerHTML = `
@@ -446,36 +477,27 @@ function launchTool(toolKey) {
         </div>`;
     }
   } else if (toolKey === 'zipToPdf') {
-    if (title) title.innerText = 'ZIP to PDF Converter';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Extract images from a ZIP file and convert them into a single PDF.';
     if (dropText) dropText.innerText = 'Tap to select ZIP archive';
   } else if (toolKey === 'textToPdf') {
-    if (title) title.innerText = 'Text to PDF';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Create clean PDF documents from plain text files.';
     if (dropText) dropText.innerText = 'Tap to select TXT file';
   } else if (toolKey === 'htmlToPdf') {
-    if (title) title.innerText = 'HTML to PDF';
+    if (title) title.innerText = titleMap[toolKey];
     if (desc) desc.innerText = 'Convert HTML text content or web markup directly into PDF.';
     if (dropText) dropText.innerText = 'Tap to select HTML file';
+  } else if (['pdfToJpg', 'pdfToPng'].includes(toolKey)) {
+    if (title) title.innerText = titleMap[toolKey];
+    if (desc) desc.innerText = 'Extract pages from your PDF document as high-quality image files.';
+    if (dropText) dropText.innerText = 'Tap to select a PDF';
+  } else if (toolKey === 'pdfToText') {
+    if (title) title.innerText = titleMap[toolKey];
+    if (desc) desc.innerText = 'Extract text contents from your PDF document into a text file.';
+    if (dropText) dropText.innerText = 'Tap to select a PDF';
   } else {
-    let formattedTitle = toolKey;
-    const lowerKey = toolKey.toLowerCase();
-    if (lowerKey === 'pdfexcel') formattedTitle = 'PDF to Excel';
-    else if (lowerKey === 'pdftext') formattedTitle = 'PDF to Text';
-    else if (lowerKey === 'pdfword') formattedTitle = 'PDF to Word';
-    else if (lowerKey === 'pdfjpg') formattedTitle = 'PDF to JPG';
-    else if (lowerKey === 'pdfpng') formattedTitle = 'PDF to PNG';
-    else if (lowerKey === 'wordtopdf') formattedTitle = 'Word to PDF';
-    else if (lowerKey === 'exceltopdf') formattedTitle = 'Excel to PDF';
-    else if (lowerKey === 'ppttopdf') formattedTitle = 'PowerPoint to PDF';
-    else if (lowerKey === 'htmltopdf') formattedTitle = 'HTML to PDF';
-    else if (lowerKey === 'texttopdf') formattedTitle = 'Text to PDF';
-    else if (lowerKey === 'ziptopdf') formattedTitle = 'ZIP to PDF';
-    else {
-      formattedTitle = toolKey.replace(/([A-Z])/g, ' $1').toUpperCase();
-    }
-
-    if (title) title.innerText = formattedTitle;
+    if (title) title.innerText = titleMap[toolKey] || toolKey.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase());
     if (desc) desc.innerText = 'Process your document instantly.';
     if (dropText) dropText.innerText = 'Tap to select file(s)';
   }
@@ -821,8 +843,8 @@ async function padJpegSafely(blob, targetBytes) {
   return new Blob(parts.slice(0, idx + 1), { type: 'image/jpeg' });
 }
 
-function canvasToBlobFast(canvas, quality) {
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+function canvasToBlobFast(canvas, quality, mimeType = 'image/jpeg') {
+  return new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
 }
 
 async function executeToolAction() {
@@ -849,6 +871,7 @@ async function executeToolAction() {
       downloadBlob(blob, `Digital_Signature.${ext}`, format);
       showSuccessPopup('Digital Signature Downloaded Successfully!');
       closeWorkspace();
+      exportCanvas.width = 0; exportCanvas.height = 0; // Memory cleanup
     }, format, 0.95);
     return;
   }
@@ -868,7 +891,8 @@ async function executeToolAction() {
     return;
   }
 
-  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf'];
+  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'pdfToJpg', 'pdfToPng', 'pdfToText', 'pdfToWord', 'pdfToExcel', 'pdfToPpt'];
+  
   if (fileNeeded.includes(activeTool) && selectedFiles.length === 0) {
     alert('Please tap to select the required file(s) first.');
     return;
@@ -876,6 +900,9 @@ async function executeToolAction() {
 
   if (btn) { btn.innerText = 'Processing...'; btn.disabled = true; }
   setProgress(10, 'Processing...');
+  
+  // Instant yield (0ms delay) to keep UI smooth but start process instantly
+  await new Promise(r => setTimeout(r, 0)); 
 
   try {
     if (activeTool === 'kbResizer') {
@@ -888,21 +915,28 @@ async function executeToolAction() {
         ? Math.floor(valInput * 1000 * 1000 * 0.98)
         : Math.floor(valInput * 1000 * 0.98);
 
-      const img = await loadImageFast(selectedFiles[0]);
+      const origFile = selectedFiles[0];
+      let outMime = (origFile.type === 'image/png' || origFile.type === 'image/webp') ? origFile.type : 'image/jpeg';
+      const isTransparent = outMime !== 'image/jpeg';
+
+      const img = await loadImageFast(origFile);
       const origW = img.naturalWidth || img.width;
       const origH = img.naturalHeight || img.height;
       const aspect = origW / origH;
 
       function renderHD(w, h) {
         const cv = document.createElement('canvas');
-        cv.width = w;
-        cv.height = h;
-        const cx = cv.getContext('2d', { alpha: false });
+        cv.width = Math.max(1, w);
+        cv.height = Math.max(1, h);
+        const cx = cv.getContext('2d', { alpha: isTransparent });
         cx.imageSmoothingEnabled = true;
         cx.imageSmoothingQuality = 'high';
-        cx.fillStyle = '#ffffff';
-        cx.fillRect(0, 0, w, h);
-        cx.drawImage(img, 0, 0, w, h);
+        
+        if (!isTransparent) {
+          cx.fillStyle = '#ffffff';
+          cx.fillRect(0, 0, cv.width, cv.height);
+        }
+        cx.drawImage(img, 0, 0, cv.width, cv.height);
         return cv;
       }
 
@@ -918,53 +952,67 @@ async function executeToolAction() {
           renderH = Math.round(origH * scale);
         }
         const cv = renderHD(renderW, renderH);
-        const baseBlob = await canvasToBlobFast(cv, 0.96);
-        bestBlob = await padJpegSafely(baseBlob, maxAllowedBytes);
+        await new Promise(r => setTimeout(r, 0)); // Instant yield
+        const baseBlob = await canvasToBlobFast(cv, 0.96, outMime);
+        bestBlob = (outMime === 'image/jpeg') ? await padJpegSafely(baseBlob, maxAllowedBytes) : baseBlob;
+        cv.width = 0; cv.height = 0; 
       } else {
-        const targetPixels = maxAllowedBytes * 4.2;
+        const targetPixels = maxAllowedBytes * 5.0; 
         const origPixels = origW * origH;
         let scale = 1;
         if (origPixels > targetPixels) {
-          scale = Math.max(0.25, Math.sqrt(targetPixels / origPixels));
+          scale = Math.sqrt(targetPixels / origPixels);
         }
 
-        let targetW = Math.max(240, Math.round(origW * scale));
-        let targetH = Math.max(240, Math.round(targetW / aspect));
+        let targetW = Math.round(origW * scale);
+        let targetH = Math.round(targetW / aspect);
+        
         if (targetW > origW) {
           targetW = origW;
           targetH = origH;
         }
 
         let cv = renderHD(targetW, targetH);
-        let probeBlob = await canvasToBlobFast(cv, 0.85);
+        await new Promise(r => setTimeout(r, 0)); // Instant yield
+        let probeBlob = await canvasToBlobFast(cv, 0.85, outMime);
 
         if (probeBlob.size <= maxAllowedBytes) {
-          const hqBlob = await canvasToBlobFast(cv, 0.95);
-          bestBlob = hqBlob.size <= maxAllowedBytes
-            ? await padJpegSafely(hqBlob, maxAllowedBytes)
-            : probeBlob;
-        } else {
-          const ratio = maxAllowedBytes / probeBlob.size;
-          const estQ = Math.max(0.45, Math.min(0.84, Number((0.85 * Math.pow(ratio, 0.85)).toFixed(2))));
-          let secondBlob = await canvasToBlobFast(cv, estQ);
-
-          if (secondBlob.size <= maxAllowedBytes) {
-            bestBlob = secondBlob;
+          const hqBlob = await canvasToBlobFast(cv, 0.95, outMime);
+          if (hqBlob.size <= maxAllowedBytes) {
+              bestBlob = (outMime === 'image/jpeg') ? await padJpegSafely(hqBlob, maxAllowedBytes) : hqBlob;
           } else {
-            const downScale = Math.sqrt(maxAllowedBytes / secondBlob.size) * 0.92;
-            const fbW = Math.max(180, Math.round(targetW * downScale));
-            const fbH = Math.max(180, Math.round(fbW / aspect));
-            const fbCv = renderHD(fbW, fbH);
-            bestBlob = await canvasToBlobFast(fbCv, 0.65);
+              bestBlob = probeBlob;
+          }
+        } else {
+          let found = false;
+          for(let q = 0.80; q >= 0.30; q -= 0.10) {
+             const tBlob = await canvasToBlobFast(cv, q, outMime);
+             if (tBlob.size <= maxAllowedBytes) {
+                bestBlob = tBlob;
+                found = true;
+                break;
+             }
+          }
+          
+          if (!found) {
+             const downScale = Math.sqrt(maxAllowedBytes / probeBlob.size) * 0.95;
+             const fbW = Math.max(10, Math.round(targetW * downScale));
+             const fbH = Math.max(10, Math.round(fbW / aspect));
+             const fbCv = renderHD(fbW, fbH);
+             await new Promise(r => setTimeout(r, 0)); // Instant yield
+             bestBlob = await canvasToBlobFast(fbCv, 0.75, outMime);
+             fbCv.width = 0; fbCv.height = 0; 
           }
         }
+        cv.width = 0; cv.height = 0; 
       }
 
       if (typeof img.close === 'function') img.close();
 
       setProgress(100, 'Done');
-      const finalFileName = `${customName}_${valInput}${unit}.jpg`;
-      downloadBlob(bestBlob, finalFileName, 'image/jpeg');
+      const ext = outMime === 'image/png' ? 'png' : (outMime === 'image/webp' ? 'webp' : 'jpg');
+      const finalFileName = `${customName}_${valInput}${unit}.${ext}`;
+      downloadBlob(bestBlob, finalFileName, outMime);
 
       const sizeDisplay = isMB
         ? (bestBlob.size / (1000 * 1000)).toFixed(1) + ' MB'
@@ -973,7 +1021,7 @@ async function executeToolAction() {
       closeWorkspace();
       setTimeout(() => {
         showSuccessPopup(`Photo Resized Successfully (${sizeDisplay})!`);
-      }, 150);
+      }, 50);
       return;
     }
 
@@ -981,6 +1029,8 @@ async function executeToolAction() {
 
     if (activeTool === 'passportGrid') {
       setProgress(35, 'Processing Passport Photo...');
+      await new Promise(r => setTimeout(r, 0)); // Instant yield
+
       const downloadType = document.getElementById('optPassportType')?.value || 'grid';
       const copies = parseInt(document.getElementById('optPassportCopies')?.value) || 8;
       const borderType = document.getElementById('optPassportBorder')?.value || 'thin';
@@ -1055,14 +1105,15 @@ async function executeToolAction() {
             placed++;
           }
         }
-
+        await new Promise(r => setTimeout(r, 0)); // Instant yield
         const gBlob = await canvasToBlobFast(gridCanvas, 0.95);
         downloadBlob(gBlob, `${fileName}_${copies}_Copies_Grid.jpg`, 'image/jpeg');
+        gridCanvas.width = 0; gridCanvas.height = 0; 
       } else if (downloadType === 'both') {
         const sBlob = await canvasToBlobFast(singleCanvas, 0.95);
         downloadBlob(sBlob, `${fileName}_Single_3.5x4.5cm.jpg`, 'image/jpeg');
 
-        await new Promise(r => setTimeout(r, 350));
+        await new Promise(r => setTimeout(r, 100)); // Small delay to separate two downloads smoothly
 
         let cols = 3;
         if (copies === 2 || copies === 4) cols = 2;
@@ -1090,11 +1141,13 @@ async function executeToolAction() {
             placed++;
           }
         }
-
+        await new Promise(r => setTimeout(r, 0)); // Instant yield
         const gBlob = await canvasToBlobFast(gridCanvas, 0.95);
         downloadBlob(gBlob, `${fileName}_${copies}_Copies_Grid.jpg`, 'image/jpeg');
+        gridCanvas.width = 0; gridCanvas.height = 0; 
       }
 
+      singleCanvas.width = 0; singleCanvas.height = 0; 
       setProgress(100, 'Done');
       showSuccessPopup('Passport Photo Processed Successfully!');
       closeWorkspace();
@@ -1122,12 +1175,14 @@ async function executeToolAction() {
       ctx.drawImage(img, 0, 0, targetW, targetH);
       if (typeof img.close === 'function') img.close();
 
+      await new Promise(r => setTimeout(r, 0)); // Instant yield
       let bestBlob = await canvasToBlobFast(canvas, 0.88);
       if (bestBlob.size > targetMaxBytes) {
         const estQ = Math.max(0.35, Number((0.88 * (targetMaxBytes / bestBlob.size)).toFixed(2)));
         bestBlob = await canvasToBlobFast(canvas, estQ);
       }
 
+      canvas.width = 0; canvas.height = 0; 
       downloadBlob(bestBlob, `${fileName}.jpg`, 'image/jpeg');
       showSuccessPopup('Exam Document Resized Successfully!');
 
@@ -1207,6 +1262,8 @@ async function executeToolAction() {
       
       for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
           setProgress(20 + Math.floor((pageNum / totalPages) * 70), `Compressing page ${pageNum} of ${totalPages}...`);
+          await new Promise(r => setTimeout(r, 0)); // Instant Yield
+          
           const page = await pdfDoc.getPage(pageNum);
           const viewport = page.getViewport({ scale: 1.5 }); 
           
@@ -1221,6 +1278,7 @@ async function executeToolAction() {
           await page.render({ canvasContext: ctx, viewport: viewport }).promise;
           
           const imgData = canvas.toDataURL('image/jpeg', qualityDecimal);
+          canvas.width = 0; canvas.height = 0; 
           
           const orientation = viewport.width > viewport.height ? 'landscape' : 'portrait';
           newPdf.addPage([viewport.width, viewport.height], orientation);
@@ -1300,7 +1358,7 @@ async function executeToolAction() {
       const { jsPDF } = jsPdfLib || window.jspdf;
       const pdf = new jsPDF();
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlText;
+      tempDiv.textContent = htmlText;
       const plainText = tempDiv.innerText || tempDiv.textContent; 
       const splitText = pdf.splitTextToSize(plainText, 180);
       pdf.text(splitText, 15, 15);
@@ -1336,7 +1394,90 @@ async function executeToolAction() {
       downloadBlob(pdf.output('blob'), 'ZIP_to_PDF.pdf', 'application/pdf');
       showSuccessPopup('ZIP Images Converted to PDF!');
 
-    } else if (['wordToPdf', 'excelToPdf', 'pptToPdf'].includes(activeTool)) {
+    } else if (activeTool === 'pdfToJpg' || activeTool === 'pdfToPng') {
+      setProgress(20, 'Loading PDF Document...');
+      const pdfjs = await ensurePdfJsLoaded();
+      if (!pdfjs) throw new Error('PDF library failed to load.');
+
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const pdfDoc = await pdfjs.getDocument({ data: fileBuffer }).promise;
+      const totalPages = pdfDoc.numPages;
+      const ext = activeTool === 'pdfToJpg' ? 'jpg' : 'png';
+      const mime = activeTool === 'pdfToJpg' ? 'image/jpeg' : 'image/png';
+
+      if (totalPages === 1) {
+        setProgress(60, 'Converting Page 1...');
+        await new Promise(r => setTimeout(r, 0)); // Instant Yield
+        
+        const page = await pdfDoc.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+        const blob = await canvasToBlobFast(canvas, 0.95);
+        downloadBlob(blob, `Converted_Page_1.${ext}`, mime);
+        canvas.width = 0; canvas.height = 0; 
+      } else {
+        setProgress(40, 'Preparing ZIP for multiple pages...');
+        let JSZip = window.JSZip;
+        if (!JSZip) {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+          JSZip = window.JSZip;
+        }
+        const zip = new JSZip();
+
+        for (let i = 1; i <= totalPages; i++) {
+          setProgress(40 + Math.floor((i / totalPages) * 50), `Converting Page ${i}...`);
+          await new Promise(r => setTimeout(r, 0)); // Instant Yield
+          
+          const page = await pdfDoc.getPage(i);
+          const viewport = page.getViewport({ scale: 2.0 });
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { alpha: false });
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+          const dataUrl = canvas.toDataURL(mime, 0.95);
+          const base64Data = dataUrl.split(',')[1];
+          zip.file(`Page_${i}.${ext}`, base64Data, { base64: true });
+          canvas.width = 0; canvas.height = 0; 
+        }
+        setProgress(95, 'Zipping images...');
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(zipBlob, `Converted_Images.zip`, 'application/zip');
+      }
+      showSuccessPopup('PDF Converted to Images Successfully!');
+
+    } else if (activeTool === 'pdfToText') {
+      setProgress(30, 'Reading PDF content...');
+      const pdfjs = await ensurePdfJsLoaded();
+      if (!pdfjs) throw new Error('PDF library failed to load.');
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const pdfDoc = await pdfjs.getDocument({ data: fileBuffer }).promise;
+      let fullText = '';
+      
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+         setProgress(30 + Math.floor((i / pdfDoc.numPages) * 60), `Extracting Text from Page ${i}...`);
+         await new Promise(r => setTimeout(r, 0)); // Instant Yield
+         const page = await pdfDoc.getPage(i);
+         const textContent = await page.getTextContent();
+         const pageText = textContent.items.map(item => item.str).join(' ');
+         fullText += `--- Page ${i} ---\n\n${pageText}\n\n`;
+      }
+      
+      const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+      downloadBlob(blob, 'Extracted_Text.txt', 'text/plain');
+      showSuccessPopup('Text Extracted Successfully!');
+
+    } else if (['wordToPdf', 'excelToPdf', 'pptToPdf', 'pdfToWord', 'pdfToExcel', 'pdfToPpt'].includes(activeTool)) {
       alert('Note: Pure offline conversion for Word/Excel/PPT requires premium server-side APIs to maintain formatting. This feature is coming in the next update!');
       
     } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf' || activeTool === 'webpToPdf') {
@@ -1357,6 +1498,7 @@ async function executeToolAction() {
       const margin = 10;
 
       for (let i = 0; i < selectedFiles.length; i++) {
+        await new Promise(r => setTimeout(r, 0)); // Instant Yield
         const rawData = await readFileAsDataURL(selectedFiles[i]);
         const img = new Image();
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = rawData; });
@@ -1429,28 +1571,36 @@ function readFileAsDataURL(file) {
   });
 }
 
-// Instant Cross-Device Downloader (Mobile & Desktop Safe)
+// Instant Cross-Device Downloader without delay
 function downloadBlob(content, name, mimeType = 'application/octet-stream') {
   if (!content) return;
-  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
 
-  const url = window.URL.createObjectURL(blob);
+  const originalBlob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+  const forceDownloadBlob = new Blob([originalBlob], { type: 'application/octet-stream' });
+
+  const url = window.URL.createObjectURL(forceDownloadBlob);
   const a = document.createElement('a');
+  
   a.style.display = 'none';
   a.href = url;
   a.download = name || 'downloaded_file';
-  document.body.appendChild(a);
   
-  a.dispatchEvent(new MouseEvent('click', {
-    bubbles: true,
-    cancelable: true,
-    view: window
-  }));
+  document.body.appendChild(a);
 
-  setTimeout(() => {
-    if (a.parentNode) a.parentNode.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }, 60000);
+  // requestAnimationFrame ensures it executes immediately after DOM update
+  requestAnimationFrame(() => {
+    try {
+      a.click();
+    } catch (e) {
+      const ev = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+      a.dispatchEvent(ev);
+    }
+    
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 10000);
+  });
 }
 
 function updatePrivacyStatus() {
