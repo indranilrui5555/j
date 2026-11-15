@@ -240,43 +240,6 @@
   }
 </style>
   <style>
-   @media screen and (max-width: 768px) {
-    header div[style*="gap"] {
-        display: grid !important;
-        grid-template-columns: 1fr max-content !important;
-        row-gap: 4px !important;
-        column-gap: 8px !important;
-        align-items: center !important;
-        justify-content: end !important;
-    }
-    
-    /* Install App - Top position */
-    header div[style*="gap"] > :nth-child(1) {
-        grid-column: 1 !important;
-        grid-row: 1 !important;
-    }
-    
-    /* Love India - Bottom position (under Install App) */
-    header div[style*="gap"] > :nth-child(2) {
-        grid-column: 1 !important;
-        grid-row: 2 !important;
-    }
-    
-    /* Login/Profile Icon - Positioned on the right side spanning both rows */
-    header div[style*="gap"] > :nth-child(3) {
-        grid-column: 2 !important;
-        grid-row: 1 / span 2 !important;
-    }
-    
-    /* Button sizing to fit perfectly inside the header */
-    header div[style*="gap"] button, 
-    header div[style*="gap"] a {
-        font-size: 11px !important;
-        padding: 5px 8px !important;
-        margin: 0 !important;
-        width: 100% !important;
-    }
-}
     /* Universal Apple iOS/Safari & Touch Optimization */
     * {
       -webkit-tap-highlight-color: transparent;
@@ -1112,6 +1075,13 @@
       </div>
 
       <div class="tool-card" data-cat="generator" onclick="openContactModal()">
+       div class="love-india-wrapper">
+  <div class="dashed-line"></div>
+  <div class="love-india-badge">
+    <span>🤍</span> Love India
+  </div>
+  <div class="dashed-line"></div>
+</div>
         <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;"><i class="fa-solid fa-headset"></i></div>
         <h3>Contact & Support Form <span class="badge-new">NEW</span></h3>
         <p>Send your feedback, inquiries or report any tool issue directly to support desk.</p>
