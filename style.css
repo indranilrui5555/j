@@ -15,29 +15,22 @@
     display: flex;
     align-items: center;
     justify-content: flex-end; /* To align items to the right */
-    gap: 15px; /* Space between the buttons and profile icon */
+    gap: 10px; /* Space between the buttons */
 }
 
 /* Love India button style */
 .love-india-btn {
     display: flex;
     align-items: center;
-    gap: 10px; /* Space between Love India and Install App */
-    padding: 8px 12px;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* A nice background gradient (optional) */
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     border: none;
     border-radius: 20px;
     color: white;
     cursor: pointer;
     font-size: 14px;
-}
-
-/* Install App span style (inside Love India) */
-.install-app-btn {
-    background-color: rgba(255, 255, 255, 0.2); /* Slightly light background */
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px; 
+    font-weight: bold;
+    white-space: nowrap; /* Prevent text from wrapping to the next line */
 }
 }
 /* Fixed: Replaced hyphen (-) with asterisk (*) for the universal selector */
