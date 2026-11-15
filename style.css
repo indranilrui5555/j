@@ -10,11 +10,34 @@
   --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 15px 30px -5px rgba(229, 50, 45, 0.3);
 }
+/* Main header container */
 .header-actions {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: flex-end; /* To align items to the right */
+    gap: 15px; /* Space between the buttons and profile icon */
+}
+
+/* Love India button style */
+.love-india-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between Love India and Install App */
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* A nice background gradient (optional) */
+    border: none;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Install App span style (inside Love India) */
+.install-app-btn {
+    background-color: rgba(255, 255, 255, 0.2); /* Slightly light background */
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px; 
 }
 }
 /* Fixed: Replaced hyphen (-) with asterisk (*) for the universal selector */
