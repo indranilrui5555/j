@@ -13,7 +13,9 @@
 .header-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
+}
 }
 /* Fixed: Replaced hyphen (-) with asterisk (*) for the universal selector */
 * {
