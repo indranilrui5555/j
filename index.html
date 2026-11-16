@@ -60,20 +60,8 @@
  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js?v=3"></script>
  <link rel="stylesheet" href="style.css?v=3">
   
-  <style>
-   @media (max-width: 768px) {
-    .your-modal-class {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        max-height: 100vh; /* Auto-adjusts when the keyboard opens */
-        border-radius: 0;
-        overflow-y: auto;
-    }
-}
-    /* Resize only the header buttons (leaves the login form buttons intact) */
+  <style>  
+  /* Resize only the header buttons (leaves the login form buttons intact) */
     header div[style*="gap"] button, 
     header div[style*="gap"] a {
         font-size: 11px !important;
@@ -624,9 +612,29 @@
       box-shadow: 0 0 0 2px #2563eb;
       transform: scale(1.15);
     }
-   .your-modal-class {
-    max-height: 80vh; /* Takes up 80% of the screen height, leaving room for the keyboard */
-    overflow-y: auto; /* Enables internal scrolling if the content gets too long */
+   /* Default modal state (centered) */
+.modal-container {
+    position: fixed; 
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centered horizontally and vertically */
+    width: 90%;
+    max-width: 500px;
+    max-height: 85dvh;
+    overflow-y: auto;
+    z-index: 9999;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease; /* Smooth transition for moving up/down */
+}
+
+/* Modal state when the keyboard is open (sized like the image) */
+.modal-container.keyboard-active {
+    top: 2%; /* Placed 2% below the top edge of the screen */
+    transform: translateX(-50%); /* Centered ONLY horizontally */
+    max-height: 95dvh; /* Takes up most of the space above the keyboard */
+    bottom: auto;
 }
   </style>
   
@@ -5118,6 +5126,29 @@ if(mergePdfBtn) {
         }
     });
 }
+</script>
+ <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const allInputs = document.querySelectorAll('input, textarea');
+
+        allInputs.forEach(input => {
+            // When clicking inside the input (Keyboard opens)
+            input.addEventListener('focus', function() {
+                const parentModal = this.closest('.modal-container');
+                if (parentModal) {
+                    parentModal.classList.add('keyboard-active');
+                }
+            });
+
+            // When clicking outside the input (Keyboard closes)
+            input.addEventListener('blur', function() {
+                const parentModal = this.closest('.modal-container');
+                if (parentModal) {
+                    parentModal.classList.remove('keyboard-active');
+                }
+            });
+        });
+    });
 </script>
 </body>
 </html>
