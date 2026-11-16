@@ -612,28 +612,12 @@
       box-shadow: 0 0 0 2px #2563eb;
       transform: scale(1.15);
     }
-   /* Default modal state (centered) */
-.modal-container {
-    position: fixed; 
-    top: 50%; 
-    left: 50%;
-    transform: translate(-50%, -50%); /* Centered horizontally and vertically */
-    width: 90%;
-    max-width: 500px;
-    max-height: 85dvh;
-    overflow-y: auto;
-    z-index: 9999;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    transition: all 0.3s ease; /* Smooth transition for moving up/down */
-}
-
-/* Modal state when the keyboard is open (sized like the image) */
+   /* Modal state when the keyboard is open (for the exact requested size) */
 .modal-container.keyboard-active {
-    top: 2%; /* Placed 2% below the top edge of the screen */
-    transform: translateX(-50%); /* Centered ONLY horizontally */
-    max-height: 95dvh; /* Takes up most of the space above the keyboard */
+    top: 12%; /* Leaves a 12% gap at the top so it doesn't touch the screen edge */
+    transform: translateX(-50%); /* Keeps it centered horizontally */
+    max-height: 55vh; /* Restricts the maximum height so it doesn't stretch */
+    height: auto; /* Adapts to the content inside without getting unnecessarily large */
     bottom: auto;
 }
   </style>
