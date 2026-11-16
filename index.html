@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
  <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2563eb">
   <!-- ==========================================================================
@@ -4931,5 +4932,30 @@ function shareWebsite() {
     }[tag]));
   }
 </script>
-  </body>
+ <!-- ================= Voice Command Section ================= -->
+    <div style="padding: 15px; background: #e9ecef; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+        <h3>🎙️ Voice Assistant</h3>
+        <button id="voiceBtn" style="background: #ff4757; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;">Start Voice Command</button>
+        <p id="voiceStatus" style="color: #555; font-weight: bold;">Click the button and say a command...</p>
+        <small>Try saying: <b>"Select Image"</b>, <b>"Merge PDF"</b>, or <b>"Download Image"</b></small>
+    </div>
+
+    <!-- ================= 1. Image Resize Section ================= -->
+    <h2>1. Image Resize & Convert (JPG/PNG)</h2>
+    <input type="file" id="imageInput" accept="image/jpeg, image/png">
+    <br><br>
+    <a id="downloadImage" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; background: #28a745; display: none;">Download Resized Image</a>
+    
+    <hr style="margin: 30px 0;">
+
+    <!-- ================= 2. PDF Merge Section ================= -->
+    <h2>2. PDF Merger</h2>
+    <p>Select two PDFs first, then click Merge or use Voice Command:</p>
+    <input type="file" id="pdfInput1" accept="application/pdf"><br><br>
+    <input type="file" id="pdfInput2" accept="application/pdf"><br><br>
+    <button id="mergePdfBtn" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; border: none; background: #007bff;">Merge PDFs</button>
+    <br><br>
+    <a id="downloadPdf" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; background: #dc3545; display: none;">Download Merged PDF</a>
+  <script src="script.js"></script>
+</body>
 </html>
