@@ -4958,5 +4958,151 @@ function shareWebsite() {
     <br><br><a id="downloadPdf" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; background: #dc3545; display: none;">Download Merged PDF</a>
   </script>
   <script src="script.js"></script>
+<script>
+// ================= Maximum File Size Limit (20 MB) =================
+const MAX_FILE_SIZE = 20 * 1024 * 1024; 
+
+// ================= Voice Command (Web Speech API) =================
+const voiceBtn = document.getElementById('voiceBtn');
+const voiceStatus = document.getElementById('voiceStatus');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US'; 
+
+    voiceBtn.addEventListener('click', () => {
+        recognition.start();
+        voiceStatus.innerText = "Listening... Speak now 🎤";
+    });
+
+    recognition.onresult = (event) => {
+        const command = event.results[0][0].transcript.toLowerCase();
+        voiceStatus.innerText = `You said: "${command}"`;
+
+        if (command.includes('image') || command.includes('picture')) {
+            document.getElementById('imageInput').click(); 
+        } 
+        else if (command.includes('merge') || command.includes('pdf')) {
+            document.getElementById('mergePdfBtn').click(); 
+        } 
+        else if (command.includes('download image')) {
+            document.getElementById('downloadImage').click(); 
+        } 
+        else if (command.includes('download pdf')) {
+            document.getElementById('downloadPdf').click(); 
+        } 
+        else {
+            voiceStatus.innerText = `Command not recognized: "${command}". Try again.`;
+        }
+    };
+
+    recognition.onerror = () => {
+        voiceStatus.innerText = "Error: Could not hear properly. Try again.";
+    };
+} else {
+    if(voiceBtn) voiceBtn.style.display = 'none';
+    if(voiceStatus) voiceStatus.innerText = "Voice Command is not supported in this browser (Try Chrome).";
+}
+
+// ================= Image Resize Logic =================
+const imageInput = document.getElementById('imageInput');
+const downloadImage = document.getElementById('downloadImage');
+
+if(imageInput) {
+    imageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) return alert('Image size cannot exceed 20 MB.');
+        if (!file.type.match('image.*')) return alert('Please upload a valid image format.');
+
+        try {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    const resizedImageURL = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    if(downloadImage) {
+                        downloadImage.href = resizedImageURL;
+                        downloadImage.download = 'DocuCraft-resized.jpg';
+                        downloadImage.style.display = 'inline-block';
+                    }
+                    if(voiceStatus) voiceStatus.innerText = "Image resized! Say 'Download Image' to save.";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            alert('Error processing image.');
+        }
+    });
+}
+
+// ================= PDF Merge Logic =================
+const pdfInput1 = document.getElementById('pdfInput1');
+const pdfInput2 = document.getElementById('pdfInput2');
+const mergePdfBtn = document.getElementById('mergePdfBtn');
+const downloadPdf = document.getElementById('downloadPdf');
+
+if(mergePdfBtn) {
+    mergePdfBtn.addEventListener('click', async function() {
+        const file1 = pdfInput1 ? pdfInput1.files[0] : null;
+        const file2 = pdfInput2 ? pdfInput2.files[0] : null;
+
+        if (!file1 || !file2) return alert('Please select two PDFs first.');
+        if (file1.size > MAX_FILE_SIZE || file2.size > MAX_FILE_SIZE) return alert('PDF size cannot exceed 20 MB.');
+
+        try {
+            mergePdfBtn.innerText = "Processing...";
+            if(voiceStatus) voiceStatus.innerText = "Merging PDFs... Please wait.";
+
+            const arrayBuffer1 = await file1.arrayBuffer();
+            const arrayBuffer2 = await file2.arrayBuffer();
+
+            const { PDFDocument } = PDFLib;
+            const pdf1 = await PDFDocument.load(arrayBuffer1);
+            const pdf2 = await PDFDocument.load(arrayBuffer2);
+
+            const mergedPdf = await PDFDocument.create();
+
+            const copiedPages1 = await mergedPdf.copyPages(pdf1, pdf1.getPageIndices());
+            copiedPages1.forEach((page) => mergedPdf.addPage(page));
+
+            const copiedPages2 = await mergedPdf.copyPages(pdf2, pdf2.getPageIndices());
+            copiedPages2.forEach((page) => mergedPdf.addPage(page));
+
+            const mergedPdfBytes = await mergedPdf.save();
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+            const objectURL = URL.createObjectURL(blob);
+
+            if(downloadPdf) {
+                downloadPdf.href = objectURL;
+                downloadPdf.download = 'DocuCraft-merged.pdf';
+                downloadPdf.style.display = 'inline-block';
+            }
+            mergePdfBtn.innerText = "Merge PDFs";
+            
+            if(voiceStatus) voiceStatus.innerText = "PDF Merged! Say 'Download PDF' to save.";
+
+        } catch (error) {
+            alert('Error merging PDFs.');
+            mergePdfBtn.innerText = "Merge PDFs";
+        }
+    });
+}
+</script>
 </body>
 </html>
