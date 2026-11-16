@@ -61,6 +61,18 @@
  <link rel="stylesheet" href="style.css?v=3">
   
   <style>
+   @media (max-width: 768px) {
+    .your-modal-class {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100vh; /* Auto-adjusts when the keyboard opens */
+        border-radius: 0;
+        overflow-y: auto;
+    }
+}
     /* Resize only the header buttons (leaves the login form buttons intact) */
     header div[style*="gap"] button, 
     header div[style*="gap"] a {
@@ -612,6 +624,10 @@
       box-shadow: 0 0 0 2px #2563eb;
       transform: scale(1.15);
     }
+   .your-modal-class {
+    max-height: 80vh; /* Takes up 80% of the screen height, leaving room for the keyboard */
+    overflow-y: auto; /* Enables internal scrolling if the content gets too long */
+}
   </style>
   
   <script>
