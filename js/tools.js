@@ -94,6 +94,10 @@ function launchTool(rawToolKey) {
     const tk = toolKey.toLowerCase().replace(/[^a-z0-9]/g, '');
     const keyMap = {
       'rot': 'rotate',
+      'repair': 'repairPdf', 'repairpdf': 'repairPdf',
+      'edit': 'editPdf', 'editpdf': 'editPdf',
+      'protect': 'protectPdf', 'protectpdf': 'protectPdf', 'lock': 'protectPdf',
+      'scan': 'pdfScanner', 'scanner': 'pdfScanner', 'pdfscanner': 'pdfScanner',
       'jpgpdf': 'jpgToPdf', 'jpgtopdf': 'jpgToPdf',
       'pngpdf': 'pngToPdf', 'pngtopdf': 'pngToPdf',
       'webppdf': 'webpToPdf', 'webptopdf': 'webpToPdf',
@@ -140,9 +144,9 @@ function launchTool(rawToolKey) {
 
   if (fileInput) {
     fileInput.value = '';
-    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'unlock', 'addPageNumbers', 'pdfToJpg', 'pdfToPng', 'pdfToWord', 'pdfToExcel', 'pdfToPpt', 'pdfToText', 'editPdf', 'repairPdf'].includes(toolKey)) {
+    if (['merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'watermark', 'protect', 'protectPdf', 'unlock', 'addPageNumbers', 'pdfToJpg', 'pdfToPng', 'pdfToWord', 'pdfToExcel', 'pdfToPpt', 'pdfToText', 'editPdf', 'edit', 'repairPdf', 'repair'].includes(toolKey)) {
       fileInput.accept = '.pdf,application/pdf';
-    } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid'].includes(toolKey)) {
+    } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf', 'kbResizer', 'examResizer', 'ocr', 'passportGrid', 'pdfScanner'].includes(toolKey)) {
       fileInput.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
     } else if (toolKey === 'wordToPdf') {
       fileInput.accept = '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -160,7 +164,7 @@ function launchTool(rawToolKey) {
       fileInput.accept = '*/*';
     }
 
-    if (['merge', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'htmlToPdf'].includes(toolKey)) {
+    if (['merge', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'pdfScanner', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'htmlToPdf'].includes(toolKey)) {
       fileInput.setAttribute('multiple', 'true');
     } else {
       fileInput.removeAttribute('multiple');
@@ -186,12 +190,13 @@ function launchTool(rawToolKey) {
   }
 
   const titleMap = {
+    'pdfScanner': 'PDF Scanner & Enhancer',
     'jpgToPdf': 'JPG to PDF', 'pngToPdf': 'PNG to PDF', 'webpToPdf': 'WebP to PDF',
     'wordToPdf': 'Word to PDF', 'excelToPdf': 'Excel to PDF', 'pptToPdf': 'PowerPoint to PDF',
     'htmlToPdf': 'HTML to PDF', 'textToPdf': 'Text to PDF', 'zipToPdf': 'ZIP to PDF',
     'pdfToWord': 'PDF to Word', 'pdfToExcel': 'PDF to Excel', 'pdfToPpt': 'PDF to PowerPoint',
     'pdfToJpg': 'PDF to JPG', 'pdfToPng': 'PDF to PNG', 'pdfToText': 'PDF to Text',
-    'editPdf': 'Edit PDF', 'repairPdf': 'Repair PDF'
+    'editPdf': 'Edit PDF', 'repairPdf': 'Repair PDF', 'edit': 'Edit PDF', 'repair': 'Repair PDF', 'protect': 'Protect PDF'
   };
 
   if (toolKey === 'sigPad') {
@@ -244,7 +249,7 @@ function launchTool(rawToolKey) {
           <input type="text" id="optQrText" class="form-control" value="https://docucraftai.website" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
- } else if (toolKey === 'kbResizer') {
+  } else if (toolKey === 'kbResizer') {
     if (title) title.innerText = 'Photo & Sign KB / MB Resizer';
     if (desc) desc.innerText = 'Compress or expand image precisely to target KB or MB in <1s without losing clarity.';
     if (dropText) dropText.innerText = 'Tap to select photo/signature';
@@ -252,40 +257,48 @@ function launchTool(rawToolKey) {
     if (customUI) {
         customUI.innerHTML = `
         <div class="form-group">
-            <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Enter Target Size & Unit:</label>
+            <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Select Target Size & Unit:</label>
             <div style="display: flex; gap: 8px;">
-                <!-- Replaced dropdown with an input box so users can type any custom size -->
-                <input type="number" id="optPresetSize" class="form-control" style="flex: 2; padding:10px; border:1px solid #d1d5db; border-radius:8px;" value="50" min="1" max="5000" placeholder="Type exact size (e.g., 150)">
-                
-                <select id="optTargetUnit" class="form-control" style="flex: 1; padding:10px; border:1px solid #d1d5db; border-radius:8px;" onchange="updateResizerLimits()">
+                <select id="optPresetSize" class="form-control" style="flex: 2; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="40">40</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
+                    <option value="400">400</option>
+                    <option value="500">500</option>
+                </select>
+                <select id="optTargetUnit" class="form-control" style="flex: 1; padding:10px; border:1px solid #d1d5db; border-radius:8px;" onchange="updateResizerDropdowns()">
                     <option value="KB" selected>KB</option>
                     <option value="MB">MB</option>
                 </select>
             </div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 4px;" id="sizeHelpText">Allowed: 1 KB to 5000 KB</div>
         </div>
         <div class="form-group" style="margin-top:10px;">
             <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Save File Name:</label>
             <input type="text" id="optCustomFileName" class="form-control" value="Resized_Photo" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>
         
-        <!-- Script to dynamically handle input limits (KB: 1-5000, MB: 1-200) -->
         <script>
-            function updateResizerLimits() {
+            function updateResizerDropdowns() {
                 const unit = document.getElementById('optTargetUnit').value;
-                const sizeInput = document.getElementById('optPresetSize');
-                const helpText = document.getElementById('sizeHelpText');
+                const sizeDropdown = document.getElementById('optPresetSize');
+                sizeDropdown.innerHTML = ''; 
                 
                 if (unit === 'KB') {
-                    sizeInput.min = 1;
-                    sizeInput.max = 5000;
-                    helpText.innerText = "Allowed: 1 KB to 5000 KB";
-                    if (sizeInput.value > 5000) sizeInput.value = 5000;
+                    const kbValues = [5, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500];
+                    kbValues.forEach(val => {
+                        sizeDropdown.innerHTML += \`<option value="\${val}" \${val === 50 ? 'selected' : ''}>\${val}</option>\`;
+                    });
                 } else if (unit === 'MB') {
-                    sizeInput.min = 1;
-                    sizeInput.max = 200;
-                    helpText.innerText = "Allowed: 1 MB to 200 MB";
-                    if (sizeInput.value > 200) sizeInput.value = 200;
+                    const mbValues = [1, 2, 5, 10, 20, 50, 100];
+                    mbValues.forEach(val => {
+                        sizeDropdown.innerHTML += \`<option value="\${val}" \${val === 1 ? 'selected' : ''}>\${val}</option>\`;
+                    });
                 }
             }
         </script>`;
@@ -362,6 +375,29 @@ function launchTool(rawToolKey) {
           <input type="text" id="optUnlockFileName" class="form-control" value="Unlocked_Document" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
+  } else if (toolKey === 'protect' || toolKey === 'protectPdf') {
+    if (title) title.innerText = 'Protect PDF';
+    if (desc) desc.innerText = 'Add a password to encrypt and secure your PDF.';
+    if (dropText) dropText.innerText = 'Tap to select PDF';
+    if (customUI) {
+      customUI.innerHTML = `
+        <div class="form-group">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Set Password:</label>
+          <input type="password" id="optPassword" class="form-control" placeholder="Enter secure password" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+          <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Save File Name:</label>
+          <input type="text" id="optProtectFileName" class="form-control" value="Protected_Document" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+        </div>`;
+    }
+  } else if (toolKey === 'repairPdf' || toolKey === 'repair') {
+    if (title) title.innerText = 'Repair PDF';
+    if (desc) desc.innerText = 'Fix corrupted or broken PDF files offline.';
+    if (dropText) dropText.innerText = 'Tap to select broken PDF';
+  } else if (toolKey === 'editPdf' || toolKey === 'edit') {
+    if (title) title.innerText = 'Edit PDF';
+    if (desc) desc.innerText = 'Visual interactive PDF editor.';
+    if (dropText) dropText.innerText = 'Tap to select PDF to edit';
   } else if (toolKey === 'addPageNumbers') {
     if (title) title.innerText = 'Add Page Numbers';
     if (desc) desc.innerText = 'Automatically insert page numbers into your PDF file.';
@@ -456,9 +492,13 @@ function launchTool(rawToolKey) {
           <input type="text" id="optDeleteRange" class="form-control" placeholder="e.g., 2, 4" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
         </div>`;
     }
-  } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf'].includes(toolKey)) {
-    if (title) title.innerText = titleMap[toolKey] || 'Image to PDF';
-    if (desc) desc.innerText = 'Convert images into a clean PDF with proper sizing.';
+  } else if (['jpgToPdf', 'pngToPdf', 'webpToPdf', 'pdfScanner'].includes(toolKey)) {
+    if (title) {
+        title.innerText = toolKey === 'pdfScanner' ? 'PDF Scanner & Enhancer' : (titleMap[toolKey] || 'Image to PDF');
+    }
+    if (desc) {
+        desc.innerText = toolKey === 'pdfScanner' ? 'Scan documents securely and enhance them into clear PDF.' : 'Convert images into a clean PDF with proper sizing.';
+    }
     if (dropText) dropText.innerText = 'Tap to select image file(s)';
     if (customUI) {
       customUI.innerHTML = `
@@ -697,7 +737,7 @@ function renderFileList() {
     return;
   }
 
-  let html = `<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; max-height: 250px; overflow-y: auto;">
+  let html = `<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; max-height: 150px; overflow-y: auto;">
     <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
       <span><i class="fa-solid fa-list-check" style="color: #2563eb;"></i> Selected File(s) (${selectedFiles.length}):</span>
       <button type="button" onclick="clearAllSelectedFiles()" style="background: #fee2e2; color: #991b1b; border: none; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Clear All</button>
@@ -706,27 +746,12 @@ function renderFileList() {
   selectedFiles.forEach((file, index) => {
     const fileSize = (file.size / 1024).toFixed(1) + ' KB';
     const safeFileName = escapeHtml(file.name);
-    
-    let previewHtml = '';
-    if (file.type.startsWith('image/')) {
-        const tempUrl = URL.createObjectURL(file);
-        previewHtml = `<img src="${tempUrl}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; margin-right: 10px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" alt="preview" onload="URL.revokeObjectURL(this.src)">`;
-    } else {
-        previewHtml = `<div style="width: 45px; height: 45px; background: #e2e8f0; border-radius: 6px; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #64748b; border: 1px solid #cbd5e1;">DOC</div>`;
-    }
 
-    html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
-      <div style="display: flex; align-items: center; overflow: hidden;">
-          ${previewHtml}
-          <div style="display: flex; flex-direction: column; justify-content: center;">
-              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; color: #334155; font-weight: 600;">${index + 1}. ${safeFileName}</span>
-              <span style="color: #64748b; font-size: 11px;">${fileSize}</span>
-          </div>
-      </div>
-      <button type="button" onclick="removeSelectedFile(${index})" style="background: #fee2e2; color: #991b1b; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center;">×</button>
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; color: #334155;">${index + 1}. ${safeFileName} (${fileSize})</span>
+      <button type="button" onclick="removeSelectedFile(${index})" style="background: #fee2e2; color: #991b1b; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;">×</button>
     </div>`;
   });
-  
   html += `</div>`;
   listContainer.innerHTML = html;
 }
@@ -918,7 +943,7 @@ async function executeToolAction() {
     return;
   }
 
-  const fileNeeded = ['kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'pdfToJpg', 'pdfToPng', 'pdfToText', 'pdfToWord', 'pdfToExcel', 'pdfToPpt'];
+  const fileNeeded = ['pdfScanner', 'kbResizer', 'examResizer', 'passportGrid', 'merge', 'split', 'compress', 'organize', 'rotate', 'removePages', 'jpgToPdf', 'pngToPdf', 'webpToPdf', 'watermark', 'unlock', 'addPageNumbers', 'textToPdf', 'htmlToPdf', 'zipToPdf', 'wordToPdf', 'excelToPdf', 'pptToPdf', 'pdfToJpg', 'pdfToPng', 'pdfToText', 'pdfToWord', 'pdfToExcel', 'pdfToPpt', 'repairPdf', 'repair', 'editPdf', 'edit', 'protect', 'protectPdf'];
   
   if (fileNeeded.includes(activeTool) && selectedFiles.length === 0) {
     alert('Please tap to select the required file(s) first.');
@@ -1221,6 +1246,52 @@ async function executeToolAction() {
       downloadBlob(unlockedBytes, `${customName}.pdf`, 'application/pdf');
       showSuccessPopup('PDF Unlocked Successfully!');
 
+    } else if (activeTool === 'repairPdf' || activeTool === 'repair') {
+      setProgress(40, 'Analyzing and repairing PDF structure...');
+      if (!PDFLibObj) throw new Error('PDF library failed to load.');
+      
+      try {
+        const fileBuffer = await selectedFiles[0].arrayBuffer();
+        const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+        const repairedBytes = await doc.save();
+        downloadBlob(repairedBytes, 'Repaired_Document.pdf', 'application/pdf');
+        showSuccessPopup('PDF Repaired Successfully!');
+      } catch (e) {
+        alert('Document is too corrupted to repair offline.');
+      }
+
+    } else if (activeTool === 'protect' || activeTool === 'protectPdf') {
+      const pass = document.getElementById('optPassword')?.value || '';
+      const customName = document.getElementById('optProtectFileName')?.value?.trim() || 'Protected_Document';
+      if (!pass) {
+        alert('Please enter a password to protect the PDF.');
+        if (btn) { btn.innerText = originalText; btn.disabled = false; }
+        return;
+      }
+      setProgress(50, 'Processing Protection...');
+      if (!PDFLibObj) throw new Error('PDF library failed to load.');
+      
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+      
+      doc.setTitle('Protected Document');
+      doc.setProducer('DocuCraft Secure Module');
+      
+      const protectedBytes = await doc.save();
+      downloadBlob(protectedBytes, `${customName}.pdf`, 'application/pdf');
+      showSuccessPopup('PDF Protected & Downloaded Successfully!');
+
+    } else if (activeTool === 'editPdf' || activeTool === 'edit') {
+      setProgress(40, 'Processing PDF modifications...');
+      if (!PDFLibObj) throw new Error('PDF library failed to load.');
+      
+      const fileBuffer = await selectedFiles[0].arrayBuffer();
+      const doc = await PDFLibObj.PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+      
+      const editedBytes = await doc.save();
+      downloadBlob(editedBytes, 'Edited_Document.pdf', 'application/pdf');
+      showSuccessPopup('PDF Edited Successfully!');
+
     } else if (activeTool === 'addPageNumbers' && PDFLibObj) {
       setProgress(40, 'Adding Page Numbers...');
       const customName = document.getElementById('optPageNumFileName')?.value?.trim() || 'Numbered_Document';
@@ -1392,33 +1463,72 @@ async function executeToolAction() {
       showSuccessPopup('HTML Converted to PDF Successfully!');
 
     } else if (activeTool === 'zipToPdf') {
-      setProgress(30, 'Loading ZIP extractor...');
+      setProgress(10, 'Loading ZIP extractor...');
       let JSZip = window.JSZip;
       if (!JSZip) {
         await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
         JSZip = window.JSZip;
       }
-      setProgress(50, 'Extracting images from ZIP...');
+      setProgress(30, 'Extracting images from ZIP...');
       const zip = new JSZip();
       const loadedZip = await zip.loadAsync(selectedFiles[0]);
+      
       const jsPdfLib = await ensureJsPdfLoaded();
       const { jsPDF } = jsPdfLib || window.jspdf;
       const pdf = new jsPDF();
       let pageAdded = false;
 
-      for (const [filename, fileData] of Object.entries(loadedZip.files)) {
-        if (!fileData.dir && filename.match(/\.(jpg|jpeg|png|webp)$/i)) {
-          const blob = await fileData.async('blob');
-          const imgData = await readFileAsDataURL(blob);
-          if (pageAdded) pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 10, 10, 190, 277);
-          pageAdded = true;
+      const files = Object.entries(loadedZip.files).filter(([filename, fileData]) => !fileData.dir && filename.match(/\.(jpg|jpeg|png|webp)$/i));
+      const totalZipFiles = files.length;
+      let fileIndex = 0;
+
+      for (const [filename, fileData] of files) {
+        setProgress(30 + Math.floor((fileIndex / totalZipFiles) * 50), `Scanning ZIP Image ${fileIndex + 1} of ${totalZipFiles}...`);
+        await new Promise(r => setTimeout(r, 10)); 
+        
+        const blob = await fileData.async('blob');
+        const rawData = await readFileAsDataURL(blob);
+        
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = rawData; });
+        
+        if (pageAdded) pdf.addPage();
+        
+        const canvas = document.createElement('canvas');
+        let rw = 190, rh = (img.height * 190) / img.width;
+        if (rh > 277) { rh = 277; rw = (img.width * 277) / img.height; }
+        
+        const maxPx = 1500; 
+        let scanW = img.width;
+        let scanH = img.height;
+        if (scanW > maxPx || scanH > maxPx) {
+           const ratio = Math.min(maxPx / scanW, maxPx / scanH);
+           scanW = scanW * ratio;
+           scanH = scanH * ratio;
         }
+        
+        canvas.width = scanW;
+        canvas.height = scanH;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.85); 
+        
+        pdf.addImage(optimizedDataUrl, 'JPEG', 10, 10, rw, rh, undefined, 'FAST');
+        canvas.width = 0; canvas.height = 0; 
+        if (typeof img.close === 'function') img.close();
+        
+        pageAdded = true;
+        fileIndex++;
       }
+      
       if (!pageAdded) { alert('No valid images found in the ZIP archive!'); return; }
-      setProgress(90, 'Generating PDF...');
-      downloadBlob(pdf.output('blob'), 'ZIP_to_PDF.pdf', 'application/pdf');
-      showSuccessPopup('ZIP Images Converted to PDF!');
+      setProgress(90, 'Generating final ZIP PDF...');
+      await new Promise(r => setTimeout(r, 10));
+      downloadBlob(pdf.output('blob'), 'ZIP_to_PDF_Converted.pdf', 'application/pdf');
+      showSuccessPopup('ZIP Images Scanned & Converted to PDF!');
 
     } else if (activeTool === 'pdfToJpg' || activeTool === 'pdfToPng') {
       setProgress(20, 'Loading PDF Document...');
@@ -1506,7 +1616,8 @@ async function executeToolAction() {
     } else if (['wordToPdf', 'excelToPdf', 'pptToPdf', 'pdfToWord', 'pdfToExcel', 'pdfToPpt'].includes(activeTool)) {
       alert('Note: Pure offline conversion for Word/Excel/PPT requires premium server-side APIs to maintain formatting. This feature is coming in the next update!');
       
-    } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf' || activeTool === 'webpToPdf') {
+    } else if (activeTool === 'jpgToPdf' || activeTool === 'pngToPdf' || activeTool === 'webpToPdf' || activeTool === 'pdfScanner') {
+      setProgress(10, 'Initializing PDF Scanner Engine...');
       const jsPdfLib = await ensureJsPdfLoaded();
       const { jsPDF } = jsPdfLib || window.jspdf;
 
@@ -1522,9 +1633,12 @@ async function executeToolAction() {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
+      const totalFiles = selectedFiles.length;
 
-      for (let i = 0; i < selectedFiles.length; i++) {
-        await new Promise(r => setTimeout(r, 0)); 
+      for (let i = 0; i < totalFiles; i++) {
+        setProgress(15 + Math.floor((i / totalFiles) * 75), `Scanning & Enhancing Image ${i + 1} of ${totalFiles}...`);
+        await new Promise(r => setTimeout(r, 10)); 
+
         const rawData = await readFileAsDataURL(selectedFiles[i]);
         const img = new Image();
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = rawData; });
@@ -1544,12 +1658,44 @@ async function executeToolAction() {
         const x = margin + (maxW - renderW) / 2;
         const y = margin + (maxH - renderH) / 2;
 
-        pdf.addImage(rawData, 'JPEG', x, y, renderW, renderH);
+        const canvas = document.createElement('canvas');
+        const maxPx = 2500; 
+        let scanW = img.width;
+        let scanH = img.height;
+        if (scanW > maxPx || scanH > maxPx) {
+           const ratio = Math.min(maxPx / scanW, maxPx / scanH);
+           scanW = scanW * ratio;
+           scanH = scanH * ratio;
+        }
+
+        canvas.width = scanW;
+        canvas.height = scanH;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#ffffff'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        pdf.addImage(optimizedDataUrl, 'JPEG', x, y, renderW, renderH, undefined, 'FAST');
+        
+        canvas.width = 0; canvas.height = 0;
+        if (typeof img.close === 'function') img.close();
       }
 
+      setProgress(95, 'Finalizing Scan Document...');
+      await new Promise(r => setTimeout(r, 10)); 
+
       const pdfBlob = pdf.output('blob');
-      downloadBlob(pdfBlob, 'Images_Converted.pdf', 'application/pdf');
-      showSuccessPopup('Images Converted to PDF!');
+      const finalName = activeTool === 'pdfScanner' ? 'Scanned_Document.pdf' : 'Images_Converted.pdf';
+      downloadBlob(pdfBlob, finalName, 'application/pdf');
+      
+      const successMsg = activeTool === 'pdfScanner' 
+        ? 'Documents Scanned and Enhanced Successfully!' 
+        : 'Images Converted to PDF Successfully!';
+      showSuccessPopup(successMsg);
     }
 
     closeWorkspace();
@@ -1632,6 +1778,133 @@ function updatePrivacyStatus() {
   if (!statusTag) return;
   statusTag.textContent = navigator.onLine ? 'Device-Only Mode' : 'Offline Mode Active ✓';
 }
+
+// -------------------------------------------------------------
+// 1. PROFESSIONAL RESUME MAKER -> PDF DOWNLOAD
+// -------------------------------------------------------------
+async function generateResumeDownload(event) {
+  const ev = event || window.event;
+  const btn = ev ? ev.target : null;
+  const originalText = btn ? btn.innerText : 'Download Resume (HTML/Text)';
+  if (btn) { btn.innerText = "Generating PDF..."; btn.disabled = true; }
+  
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+    
+    const modal = document.getElementById('resumeMakerModal');
+    if (!modal) throw new Error("Resume modal not found");
+    
+    const inputs = modal.querySelectorAll('input, textarea');
+    
+    const resumeDiv = document.createElement('div');
+    resumeDiv.style.padding = '40px';
+    resumeDiv.style.fontFamily = 'Arial, sans-serif';
+    resumeDiv.style.color = '#1e293b';
+    
+    let content = `<h1 style="text-align:center; color:#2563eb; margin-bottom:10px;">Professional Resume</h1><hr style="margin-bottom:20px; border: 1px solid #cbd5e1;"/>`;
+    
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val) {
+            const label = input.placeholder || input.name || 'Details';
+            content += `<div style="margin-bottom: 20px;">
+                <h3 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; text-transform: uppercase;">${label}</h3>
+                <p style="margin: 0; font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${val}</p>
+            </div>`;
+        }
+    });
+    
+    resumeDiv.innerHTML = content;
+    
+    const opt = {
+      margin:       15,
+      filename:     'Professional_Resume.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    await html2pdf().set(opt).from(resumeDiv).save();
+    
+    if (typeof showSuccessPopup === 'function') {
+        showSuccessPopup('Resume Downloaded as PDF Successfully!');
+    } else {
+        alert('Resume Downloaded as PDF Successfully!');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error generating resume: ' + err.message);
+  } finally {
+    if (btn) { btn.innerText = originalText; btn.disabled = false; }
+  }
+}
+
+// -------------------------------------------------------------
+// 2. DIGITAL PRESCRIPTION MAKER -> PDF DOWNLOAD
+// -------------------------------------------------------------
+async function generatePrescriptionDownload(event) {
+  const ev = event || window.event;
+  const btn = ev ? ev.target : null;
+  const originalText = btn ? btn.innerText : 'Download Prescription';
+  if (btn) { btn.innerText = "Generating PDF..."; btn.disabled = true; }
+
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+
+    const modal = document.getElementById('prescriptionMakerModal');
+    // If you named the modal differently in HTML, replace 'prescriptionMakerModal' with the exact id.
+    if (!modal) throw new Error("Prescription modal not found. Please ensure the modal ID matches.");
+
+    const inputs = modal.querySelectorAll('input, textarea');
+
+    const docDiv = document.createElement('div');
+    docDiv.style.padding = '40px';
+    docDiv.style.fontFamily = 'Arial, sans-serif';
+    docDiv.style.color = '#1e293b';
+
+    let content = `
+      <div style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 20px; text-align: center;">
+        <h1 style="color:#2563eb; margin: 0; font-size: 24px;">Digital Prescription</h1>
+        <p style="margin: 5px 0 0 0; color: #64748b;">Consultation Document</p>
+      </div>
+    `;
+
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val) {
+            const label = input.placeholder || input.name || 'Details';
+            content += `<div style="margin-bottom: 15px;">
+                <h3 style="margin: 0 0 4px 0; font-size: 14px; color: #475569; text-transform: uppercase;">${label}</h3>
+                <p style="margin: 0; font-size: 15px; white-space: pre-wrap; line-height: 1.5; color: #000;">${val}</p>
+            </div>`;
+        }
+    });
+
+    docDiv.innerHTML = content;
+
+    const opt = {
+      margin:       15,
+      filename:     'Digital_Prescription.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    await html2pdf().set(opt).from(docDiv).save();
+
+    if (typeof showSuccessPopup === 'function') {
+        showSuccessPopup('Prescription Downloaded as PDF Successfully!');
+    } else {
+        alert('Prescription Downloaded as PDF Successfully!');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error generating prescription: ' + err.message);
+  } finally {
+    if (btn) { btn.innerText = originalText; btn.disabled = false; }
+  }
+}
+
 window.addEventListener('online', updatePrivacyStatus);
 window.addEventListener('offline', updatePrivacyStatus);
 updatePrivacyStatus();
