@@ -4643,6 +4643,187 @@ function executeVoiceCommand(cmd) {
     
   }
 }
+ // Elements
+const aiBtn = document.getElementById('ai-chat-btn');
+const aiChatBox = document.getElementById('ai-chat-box');
+const closeChat = document.getElementById('close-chat');
+const aiInput = document.getElementById('ai-input');
+const aiSendBtn = document.getElementById('ai-send');
+const chatBody = document.getElementById('chat-body');
+const micBtn = document.getElementById('mic-btn');
+const voiceToggle = document.getElementById('voice-toggle');
+const fileInput = document.getElementById('file-upload');
+const filePreview = document.getElementById('file-preview');
+const fileName = document.getElementById('file-name');
+const removeFile = document.getElementById('remove-file');
+
+let selectedFile = null;
+let isVoiceOutputEnabled = true; // AI will speak by default
+
+// REPLACE THIS with your actual Gemini API Key
+const apiKey = 'jk-git-main-indranil-ruidas-projects.vercel.app'; 
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+// --- 1. UI Toggle Logic ---
+aiBtn.addEventListener('click', () => {
+  aiChatBox.style.display = aiChatBox.style.display === 'none' ? 'flex' : 'none';
+});
+closeChat.addEventListener('click', () => {
+  aiChatBox.style.display = 'none';
+  if('speechSynthesis' in window) window.speechSynthesis.cancel(); 
+});
+
+voiceToggle.addEventListener('click', () => {
+  isVoiceOutputEnabled = !isVoiceOutputEnabled;
+  voiceToggle.textContent = isVoiceOutputEnabled ? '🔊' : '🔇';
+  if (!isVoiceOutputEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+});
+
+// --- 2. Voice Input (Speech to Text) Logic ---
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US'; // Change to 'bn-IN' if you want Bengali voice input
+
+  recognition.onstart = () => {
+    micBtn.classList.add('recording');
+    aiInput.placeholder = "Listening...";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    aiInput.value = transcript;
+  };
+
+  recognition.onend = () => {
+    micBtn.classList.remove('recording');
+    aiInput.placeholder = "Message...";
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+    micBtn.classList.remove('recording');
+    aiInput.placeholder = "Message...";
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (micBtn.classList.contains('recording')) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  });
+} else {
+  micBtn.style.display = 'none'; 
+  console.warn("Speech Recognition API not supported in this browser.");
+}
+
+// --- 3. AI Voice Output (Text to Speech) ---
+function speakText(text) {
+  if (!isVoiceOutputEnabled || !('speechSynthesis' in window)) return;
+  
+  window.speechSynthesis.cancel(); 
+  
+  // Clean markdown to sound natural
+  const cleanText = text.replace(/[*#]/g, '');
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'en-US'; // Change to 'bn-IN' for Bengali AI voice
+  utterance.rate = 1.0;
+  
+  window.speechSynthesis.speak(utterance);
+}
+
+// --- 4. File Handling ---
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) {
+    selectedFile = e.target.files[0];
+    fileName.textContent = selectedFile.name;
+    filePreview.style.display = 'block';
+  }
+});
+removeFile.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  filePreview.style.display = 'none';
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// --- 5. Send to Gemini API ---
+aiSendBtn.addEventListener('click', async () => {
+  const userText = aiInput.value.trim();
+  if (!userText && !selectedFile) return;
+
+  if('speechSynthesis' in window) window.speechSynthesis.cancel(); 
+
+  let displayMessage = `<b>You:</b> ${userText}`;
+  if (selectedFile) {
+    displayMessage += `<br><small style="color:#e2e8f0;"><i>[📎 Attached: ${selectedFile.name}]</i></small>`;
+  }
+  chatBody.innerHTML += `<p style="color: #a78bfa; text-align: right; margin-bottom: 12px; line-height: 1.4;">${displayMessage}</p>`;
+  
+  const fileToProcess = selectedFile;
+  aiInput.value = '';
+  selectedFile = null;
+  fileInput.value = '';
+  filePreview.style.display = 'none';
+
+  const loadingId = 'loading-' + Date.now();
+  chatBody.innerHTML += `<p id="${loadingId}" style="color: #888; font-size: 13px;"><i>Gemini is processing...</i></p>`;
+  chatBody.scrollTop = chatBody.scrollHeight;
+
+  try {
+    let partsArray = [];
+    if (userText) partsArray.push({ text: userText });
+    else if (fileToProcess) partsArray.push({ text: "Please describe this document or image." });
+
+    if (fileToProcess) {
+      const base64Data = await fileToBase64(fileToProcess);
+      partsArray.push({ inlineData: { mimeType: fileToProcess.type, data: base64Data } });
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: partsArray }] })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const geminiReply = data.candidates[0].content.parts[0].text;
+
+    document.getElementById(loadingId).remove();
+    chatBody.innerHTML += `
+      <div style="background: #282D46; padding: 10px; border-radius: 8px; margin-bottom: 12px; line-height: 1.5;">
+        <b>🤖 AI:</b> ${geminiReply.replace(/\n/g, '<br>')}
+      </div>`;
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    // Speak the reply
+    speakText(geminiReply);
+
+  } catch (error) {
+    document.getElementById(loadingId).remove();
+    chatBody.innerHTML += `<p style="color: #ff6b6b; font-size: 13px;">Error: Check your API key and connection.</p>`;
+    console.error(error);
+  }
+});
+
+aiInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') aiSendBtn.click();
+});
 </script>
 <script type="module" src="js/user-prefs.js"></script>
 <script>
@@ -5215,7 +5396,7 @@ aiInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') aiSendBtn.click();
 });
 </script>
- <!-- Floating AI Button -->
+<!-- Floating AI Button -->
 <button id="ai-chat-btn" class="ai-floating-btn" title="Chat with AI">🤖 AI</button>
 
 <!-- AI Chat Box -->
