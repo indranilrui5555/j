@@ -51,6 +51,123 @@
  <link rel="stylesheet" href="style.css?v=3">
   
   <style>
+   /* Floating Button */
+.ai-floating-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 35%;
+  background: linear-gradient(45deg, #4A00E0, #8E2DE2);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+}
+.ai-floating-btn:hover { transform: scale(1.1); }
+
+/* Chat Window */
+.ai-chat-window {
+  position: fixed;
+  right: 20px;
+  bottom: 100px;
+  width: 320px;
+  background-color: #1E2336;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0px 5px 20px rgba(0,0,0,0.5);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+.chat-header {
+  background-color: #282D46;
+  padding: 15px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-header h3 { margin: 0; font-size: 16px; }
+
+.chat-body {
+  padding: 15px;
+  height: 300px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+/* Footer & Inputs */
+.chat-footer {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #333;
+  align-items: center;
+  background: #1E2336;
+  border-radius: 0 0 12px 12px;
+}
+.icon-btn {
+  padding: 5px;
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: transform 0.2s;
+  background: none;
+  border: none;
+  color: white;
+}
+.icon-btn:hover { transform: scale(1.1); }
+
+/* Mic Recording Animation */
+.recording {
+  color: #ff4757 !important;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.chat-footer input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  background: #282D46;
+  color: white;
+  width: 100px;
+}
+.send-btn {
+  margin-left: 5px;
+  padding: 10px 12px;
+  background-color: #4A00E0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#file-preview {
+  display: none;
+  padding: 8px 15px;
+  font-size: 12px;
+  background: #282D46;
+  color: #a78bfa;
+  border-top: 1px solid #333;
+}
+.header-icons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
     /* Resize only the header buttons (leaves the login form buttons intact) */
     header div[style*="gap"] button, 
     header div[style*="gap"] a {
@@ -4917,6 +5034,238 @@ function shareWebsite() {
       '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
     }[tag]));
   }
+  // Elements
+const aiBtn = document.getElementById('ai-chat-btn');
+const aiChatBox = document.getElementById('ai-chat-box');
+const closeChat = document.getElementById('close-chat');
+const aiInput = document.getElementById('ai-input');
+const aiSendBtn = document.getElementById('ai-send');
+const chatBody = document.getElementById('chat-body');
+const micBtn = document.getElementById('mic-btn');
+const voiceToggle = document.getElementById('voice-toggle');
+const fileInput = document.getElementById('file-upload');
+const filePreview = document.getElementById('file-preview');
+const fileName = document.getElementById('file-name');
+const removeFile = document.getElementById('remove-file');
+
+let selectedFile = null;
+let isVoiceOutputEnabled = true; // AI will speak by default
+
+// REPLACE THIS with your actual Gemini API Key
+const apiKey = 'curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent" \
+  -H 'Content-Type: application/json' \
+  -H 'X-goog-api-key: AQ.Ab8RN6KC0Yh536v1dsuMlJyWFvFTZAiBmHzzWbT8S-pJKYtzQg' \
+  -X POST \
+  -d '{
+    "contents": [
+      {
+        "parts": [
+          {
+            "text": "Explain how AI works in a few words"
+          }
+        ]
+      }
+    ]
+  }''; 
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+// --- 1. UI Toggle Logic ---
+aiBtn.addEventListener('click', () => {
+  aiChatBox.style.display = aiChatBox.style.display === 'none' ? 'flex' : 'none';
+});
+closeChat.addEventListener('click', () => {
+  aiChatBox.style.display = 'none';
+  if('speechSynthesis' in window) window.speechSynthesis.cancel(); 
+});
+
+voiceToggle.addEventListener('click', () => {
+  isVoiceOutputEnabled = !isVoiceOutputEnabled;
+  voiceToggle.textContent = isVoiceOutputEnabled ? '🔊' : '🔇';
+  if (!isVoiceOutputEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+});
+
+// --- 2. Voice Input (Speech to Text) Logic ---
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US'; // Change to 'bn-IN' if you want Bengali voice input
+
+  recognition.onstart = () => {
+    micBtn.classList.add('recording');
+    aiInput.placeholder = "Listening...";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    aiInput.value = transcript;
+  };
+
+  recognition.onend = () => {
+    micBtn.classList.remove('recording');
+    aiInput.placeholder = "Message...";
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+    micBtn.classList.remove('recording');
+    aiInput.placeholder = "Message...";
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (micBtn.classList.contains('recording')) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  });
+} else {
+  micBtn.style.display = 'none'; 
+  console.warn("Speech Recognition API not supported in this browser.");
+}
+
+// --- 3. AI Voice Output (Text to Speech) ---
+function speakText(text) {
+  if (!isVoiceOutputEnabled || !('speechSynthesis' in window)) return;
+  
+  window.speechSynthesis.cancel(); 
+  
+  // Clean markdown to sound natural
+  const cleanText = text.replace(/[*#]/g, '');
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'en-US'; // Change to 'bn-IN' for Bengali AI voice
+  utterance.rate = 1.0;
+  
+  window.speechSynthesis.speak(utterance);
+}
+
+// --- 4. File Handling ---
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) {
+    selectedFile = e.target.files[0];
+    fileName.textContent = selectedFile.name;
+    filePreview.style.display = 'block';
+  }
+});
+removeFile.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  filePreview.style.display = 'none';
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// --- 5. Send to Gemini API ---
+aiSendBtn.addEventListener('click', async () => {
+  const userText = aiInput.value.trim();
+  if (!userText && !selectedFile) return;
+
+  if('speechSynthesis' in window) window.speechSynthesis.cancel(); 
+
+  let displayMessage = `<b>You:</b> ${userText}`;
+  if (selectedFile) {
+    displayMessage += `<br><small style="color:#e2e8f0;"><i>[📎 Attached: ${selectedFile.name}]</i></small>`;
+  }
+  chatBody.innerHTML += `<p style="color: #a78bfa; text-align: right; margin-bottom: 12px; line-height: 1.4;">${displayMessage}</p>`;
+  
+  const fileToProcess = selectedFile;
+  aiInput.value = '';
+  selectedFile = null;
+  fileInput.value = '';
+  filePreview.style.display = 'none';
+
+  const loadingId = 'loading-' + Date.now();
+  chatBody.innerHTML += `<p id="${loadingId}" style="color: #888; font-size: 13px;"><i>Gemini is processing...</i></p>`;
+  chatBody.scrollTop = chatBody.scrollHeight;
+
+  try {
+    let partsArray = [];
+    if (userText) partsArray.push({ text: userText });
+    else if (fileToProcess) partsArray.push({ text: "Please describe this document or image." });
+
+    if (fileToProcess) {
+      const base64Data = await fileToBase64(fileToProcess);
+      partsArray.push({ inlineData: { mimeType: fileToProcess.type, data: base64Data } });
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: partsArray }] })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const geminiReply = data.candidates[0].content.parts[0].text;
+
+    document.getElementById(loadingId).remove();
+    chatBody.innerHTML += `
+      <div style="background: #282D46; padding: 10px; border-radius: 8px; margin-bottom: 12px; line-height: 1.5;">
+        <b>🤖 AI:</b> ${geminiReply.replace(/\n/g, '<br>')}
+      </div>`;
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    // Speak the reply
+    speakText(geminiReply);
+
+  } catch (error) {
+    document.getElementById(loadingId).remove();
+    chatBody.innerHTML += `<p style="color: #ff6b6b; font-size: 13px;">Error: Check your API key and connection.</p>`;
+    console.error(error);
+  }
+});
+
+aiInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') aiSendBtn.click();
+});
 </script>
+ <!-- Floating AI Button -->
+<button id="ai-chat-btn" class="ai-floating-btn" title="Chat with AI">🤖 AI</button>
+
+<!-- AI Chat Box -->
+<div id="ai-chat-box" class="ai-chat-window" style="display: none;">
+  <div class="chat-header">
+    <h3>DocuCraft AI</h3>
+    <div class="header-icons">
+      <span id="voice-toggle" style="cursor:pointer;" title="Toggle Voice Output">🔊</span>
+      <span id="close-chat" style="cursor:pointer;" title="Close">❌</span>
+    </div>
+  </div>
+  
+  <div class="chat-body" id="chat-body">
+    <div style="background: #282D46; padding: 10px; border-radius: 8px; margin-bottom: 10px; line-height: 1.4;">
+      <b>🤖 AI:</b> Hi Indranil! Upload a file, type, or tap the mic to speak to me.
+    </div>
+  </div>
+  
+  <!-- File Preview Area -->
+  <div id="file-preview">
+    📎 <span id="file-name"></span>
+    <span id="remove-file" style="cursor: pointer; color: #ff6b6b; margin-left: 15px;">✖</span>
+  </div>
+
+  <div class="chat-footer">
+    <!-- Attachment -->
+    <label for="file-upload" class="icon-btn" title="Attach file">📎</label>
+    <input type="file" id="file-upload" accept="image/*, application/pdf" style="display: none;">
+    
+    <!-- Microphone -->
+    <button id="mic-btn" class="icon-btn" title="Tap to speak">🎤</button>
+    
+    <input type="text" placeholder="Message..." id="ai-input">
+    <button id="ai-send" class="send-btn">➤</button>
+  </div>
+</div>
   </body>
 </html>
