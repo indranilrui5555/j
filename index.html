@@ -1451,14 +1451,13 @@
     </div>
   </div>
 
-  <!-- Scientific Calculator Modal with Algebra / Alphabet Tab Added -->
-  <div class="calc-modal" id="scientificCalcModal" onclick="if(event.target === this) closeScientificCalcModal()">
+  <!-- Scientific Calculator Modal -->
+ <div class="calc-modal" id="scientificCalcModal" onclick="if(event.target === this) closeScientificCalcModal()">
     <div class="calc-box" style="max-width: 440px;">
       <button class="calc-close" onclick="closeScientificCalcModal()">&times;</button>
       <h3><i class="fa-solid fa-calculator" style="color: #0284c7;"></i> DocuCraft AI Scientific Calculator</h3>
       
       <div class="calc-app-box">
-        <!-- Horizontal Scrollable Tabs on Mobile & Apple devices -->
         <div class="calc-mode-tabs">
           <button class="calc-tab-btn active" onclick="switchSciTab('sciBasic', event)">Basic</button>
           <button class="calc-tab-btn" onclick="switchSciTab('sciTrig', event)">Trigonometry</button>
@@ -1476,12 +1475,12 @@
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
           <button class="btn-sci-op" onclick="appendSciValue('(')">(</button>
           <button class="btn-sci-op" onclick="appendSciValue(')')">)</button>
-          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
@@ -1501,25 +1500,25 @@
 
         <!-- Trigonometry Panel -->
         <div id="sciTrig" class="calc-buttons-grid-box calc-panel-sec">
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.sin(')">sin</button>
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.cos(')">cos</button>
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.tan(')">tan</button>
+          <button class="btn-sci-op" onclick="appendSciValue('sin(')">sin</button>
+          <button class="btn-sci-op" onclick="appendSciValue('cos(')">cos</button>
+          <button class="btn-sci-op" onclick="appendSciValue('tan(')">tan</button>
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
 
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.asin(')">arcsin</button>
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.acos(')">arccos</button>
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.atan(')">arctan</button>
-          <button class="btn-sci-op" onclick="appendSciValue('Math.PI')">π</button>
+          <button class="btn-sci-op" onclick="appendSciValue('arcsin(')">arcsin</button>
+          <button class="btn-sci-op" onclick="appendSciValue('arccos(')">arccos</button>
+          <button class="btn-sci-op" onclick="appendSciValue('arctan(')">arctan</button>
+          <button class="btn-sci-op" onclick="appendSciValue('π')">π</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
           <button onclick="appendSciValue('6')">6</button>
-          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
 
           <button onclick="appendSciValue('1')">1</button>
           <button onclick="appendSciValue('2')">2</button>
@@ -1534,25 +1533,25 @@
 
         <!-- Calculus Panel -->
         <div id="sciCalc" class="calc-buttons-grid-box calc-panel-sec">
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.log(')">ln</button>
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.log10(')">log</button>
-          <button class="btn-sci-op" onclick="appendSciValue('Math.E')">e</button>
+          <button class="btn-sci-op" onclick="appendSciValue('ln(')">ln</button>
+          <button class="btn-sci-op" onclick="appendSciValue('log(')">log</button>
+          <button class="btn-sci-op" onclick="appendSciValue('e')">e</button>
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
 
-          <button class="btn-sci-op" onclick="appendSciFunc('Math.sqrt(')">√</button>
-          <button class="btn-sci-op" onclick="appendSciValue('**2')">x²</button>
-          <button class="btn-sci-op" onclick="appendSciValue('**')">x^y</button>
+          <button class="btn-sci-op" onclick="appendSciValue('√(')">√</button>
+          <button class="btn-sci-op" onclick="appendSciValue('²')">x²</button>
+          <button class="btn-sci-op" onclick="appendSciValue('^')">x^y</button>
           <button class="btn-sci-op" onclick="appendSciValue('%')">%</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
           <button onclick="appendSciValue('6')">6</button>
-          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
 
           <button onclick="appendSciValue('1')">1</button>
           <button onclick="appendSciValue('2')">2</button>
@@ -1565,7 +1564,7 @@
           <button class="btn-sci-eq" onclick="calculateSciResult()">=</button>
         </div>
 
-        <!-- Algebra (Alphabet / Variables) Panel Added -->
+        <!-- Algebra Panel -->
         <div id="sciAlgebra" class="calc-buttons-grid-box calc-panel-sec">
           <button class="btn-sci-var" onclick="appendSciValue('x')">x</button>
           <button class="btn-sci-var" onclick="appendSciValue('y')">y</button>
@@ -1575,17 +1574,17 @@
           <button class="btn-sci-var" onclick="appendSciValue('a')">a</button>
           <button class="btn-sci-var" onclick="appendSciValue('b')">b</button>
           <button class="btn-sci-var" onclick="appendSciValue('c')">c</button>
-          <button class="btn-sci-op" onclick="appendSciValue('**2')">²</button>
+          <button class="btn-sci-op" onclick="appendSciValue('²')">²</button>
 
           <button class="btn-sci-op" onclick="appendSciValue('(')">(</button>
           <button class="btn-sci-op" onclick="appendSciValue(')')">)</button>
-          <button class="btn-sci-op" onclick="appendSciValue('**')">^</button>
-          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('^')">^</button>
+          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
@@ -1604,7 +1603,7 @@
         </div>
       </div>
     </div>
-  </div>
+ </div>
 
   <!-- Modals Section -->
   <div class="calc-modal" id="ocrModal" onclick="if(event.target === this) closeOcrModal()">
