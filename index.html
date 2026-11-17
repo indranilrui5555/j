@@ -5133,5 +5133,83 @@ if(mergePdfBtn) {
         });
     });
 </script>
+ <script>
+    let currentSciExpression = "";
+
+    function appendSciValue(value) {
+        const display = document.getElementById('scientificOutput');
+        // If the screen shows 0 and the new value isn't a decimal or bracket, replace the 0
+        if (display.innerText === "0" && value !== "." && !value.includes('(')) {
+            currentSciExpression = value;
+        } else {
+            currentSciExpression += value;
+        }
+        display.innerText = currentSciExpression;
+    }
+
+    function clearSciScreen() {
+        currentSciExpression = "";
+        document.getElementById('scientificOutput').innerText = "0";
+        document.getElementById('scientificHistory').innerText = "";
+    }
+
+    function sciBackspace() {
+        currentSciExpression = currentSciExpression.slice(0, -1);
+        document.getElementById('scientificOutput').innerText = currentSciExpression || "0";
+    }
+
+    function calculateSciResult() {
+        let expr = currentSciExpression;
+        
+        // Logic to automatically close missing brackets safely
+        const openParens = (expr.match(/\(/g) || []).length;
+        const closeParens = (expr.match(/\)/g) || []).length;
+        if (openParens > closeParens) {
+            expr += ')'.repeat(openParens - closeParens);
+        }
+
+        try {
+            // Convert visual symbols to JavaScript Math functions
+            let cleanExpr = expr
+                .replace(/sin\(/g, 'Math.sin(')
+                .replace(/cos\(/g, 'Math.cos(')
+                .replace(/tan\(/g, 'Math.tan(')
+                .replace(/arcsin\(/g, 'Math.asin(')
+                .replace(/arccos\(/g, 'Math.acos(')
+                .replace(/arctan\(/g, 'Math.atan(')
+                .replace(/ln\(/g, 'Math.log(')
+                .replace(/log\(/g, 'Math.log10(')
+                .replace(/√\(/g, 'Math.sqrt(')
+                .replace(/π/g, 'Math.PI')
+                .replace(/e/g, 'Math.E')
+                .replace(/÷/g, '/')
+                .replace(/×/g, '*')
+                .replace(/\^/g, '**')
+                .replace(/²/g, '**2');
+
+            // Handle algebra variables to prevent errors
+            cleanExpr = cleanExpr.replace(/[x-z]/g, '0').replace(/[a-c]/g, '0');
+
+            let result = eval(cleanExpr);
+            
+            if (!isFinite(result) || isNaN(result)) {
+                throw new Error("Invalid calculation");
+            }
+
+            // Fix long decimal precision issues
+            if(result % 1 !== 0) {
+                result = parseFloat(result.toFixed(8));
+            }
+
+            document.getElementById('scientificHistory').innerText = expr + " =";
+            document.getElementById('scientificOutput').innerText = result;
+            currentSciExpression = result.toString(); 
+
+        } catch (error) {
+            document.getElementById('scientificOutput').innerText = "Error";
+            currentSciExpression = "";
+        }
+    }
+</script>
 </body>
 </html>
