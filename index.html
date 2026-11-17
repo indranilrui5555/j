@@ -1,24 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+ <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
  <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2563eb">
   <!-- ==========================================================================
        DocuCraft AI - Advanced Multi-Utility Web Studio & Productivity Suite
        ========================================================================== -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4392363279740727" crossorigin="anonymous"></script>
-  
-  <!-- Google tag (gtag.js) - Analytics Integration -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-K4STMBY76F"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-  gtag('config', 'G-K4STMBY76F');
-</script>
-
-<script type="application/ld+json">
+  <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
@@ -31,7 +26,8 @@
 </script>
 <meta charset="UTF-8">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <!-- Replace your existing viewport meta tag with this one -->
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"> 
   <meta name="author" content="Indranil Ruidas">
   <meta property="og:image" content="https://docucraftai.website/banner.png">
   <meta property="og:image:width" content="1200">
@@ -60,8 +56,8 @@
  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js?v=3"></script>
  <link rel="stylesheet" href="style.css?v=3">
   
-  <style>  
-  /* Resize only the header buttons (leaves the login form buttons intact) */
+  <style>
+    /* Resize only the header buttons (leaves the login form buttons intact) */
     header div[style*="gap"] button, 
     header div[style*="gap"] a {
         font-size: 11px !important;
@@ -608,18 +604,6 @@
       vertical-align: middle;
       transition: transform 0.1s, box-shadow 0.2s;
     }
-    .pen-color-dot.active {
-      box-shadow: 0 0 0 2px #2563eb;
-      transform: scale(1.15);
-    }
-   /* Modal state when the keyboard is open (for the exact requested size) */
-.modal-container.keyboard-active {
-    top: 12%; /* Leaves a 12% gap at the top so it doesn't touch the screen edge */
-    transform: translateX(-50%); /* Keeps it centered horizontally */
-    max-height: 55vh; /* Restricts the maximum height so it doesn't stretch */
-    height: auto; /* Adapts to the content inside without getting unnecessarily large */
-    bottom: auto;
-}
   </style>
   
   <script>
@@ -1451,13 +1435,14 @@
     </div>
   </div>
 
-  <!-- Scientific Calculator Modal -->
- <div class="calc-modal" id="scientificCalcModal" onclick="if(event.target === this) closeScientificCalcModal()">
+  <!-- Scientific Calculator Modal with Algebra / Alphabet Tab Added -->
+  <div class="calc-modal" id="scientificCalcModal" onclick="if(event.target === this) closeScientificCalcModal()">
     <div class="calc-box" style="max-width: 440px;">
       <button class="calc-close" onclick="closeScientificCalcModal()">&times;</button>
       <h3><i class="fa-solid fa-calculator" style="color: #0284c7;"></i> DocuCraft AI Scientific Calculator</h3>
       
       <div class="calc-app-box">
+        <!-- Horizontal Scrollable Tabs on Mobile & Apple devices -->
         <div class="calc-mode-tabs">
           <button class="calc-tab-btn active" onclick="switchSciTab('sciBasic', event)">Basic</button>
           <button class="calc-tab-btn" onclick="switchSciTab('sciTrig', event)">Trigonometry</button>
@@ -1475,12 +1460,12 @@
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
           <button class="btn-sci-op" onclick="appendSciValue('(')">(</button>
           <button class="btn-sci-op" onclick="appendSciValue(')')">)</button>
-          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
@@ -1500,25 +1485,25 @@
 
         <!-- Trigonometry Panel -->
         <div id="sciTrig" class="calc-buttons-grid-box calc-panel-sec">
-          <button class="btn-sci-op" onclick="appendSciValue('sin(')">sin</button>
-          <button class="btn-sci-op" onclick="appendSciValue('cos(')">cos</button>
-          <button class="btn-sci-op" onclick="appendSciValue('tan(')">tan</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.sin(')">sin</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.cos(')">cos</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.tan(')">tan</button>
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
 
-          <button class="btn-sci-op" onclick="appendSciValue('arcsin(')">arcsin</button>
-          <button class="btn-sci-op" onclick="appendSciValue('arccos(')">arccos</button>
-          <button class="btn-sci-op" onclick="appendSciValue('arctan(')">arctan</button>
-          <button class="btn-sci-op" onclick="appendSciValue('π')">π</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.asin(')">arcsin</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.acos(')">arccos</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.atan(')">arctan</button>
+          <button class="btn-sci-op" onclick="appendSciValue('Math.PI')">π</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
           <button onclick="appendSciValue('6')">6</button>
-          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
 
           <button onclick="appendSciValue('1')">1</button>
           <button onclick="appendSciValue('2')">2</button>
@@ -1533,25 +1518,25 @@
 
         <!-- Calculus Panel -->
         <div id="sciCalc" class="calc-buttons-grid-box calc-panel-sec">
-          <button class="btn-sci-op" onclick="appendSciValue('ln(')">ln</button>
-          <button class="btn-sci-op" onclick="appendSciValue('log(')">log</button>
-          <button class="btn-sci-op" onclick="appendSciValue('e')">e</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.log(')">ln</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.log10(')">log</button>
+          <button class="btn-sci-op" onclick="appendSciValue('Math.E')">e</button>
           <button class="btn-sci-ac" onclick="clearSciScreen()">AC</button>
 
-          <button class="btn-sci-op" onclick="appendSciValue('√(')">√</button>
-          <button class="btn-sci-op" onclick="appendSciValue('²')">x²</button>
-          <button class="btn-sci-op" onclick="appendSciValue('^')">x^y</button>
+          <button class="btn-sci-op" onclick="appendSciFunc('Math.sqrt(')">√</button>
+          <button class="btn-sci-op" onclick="appendSciValue('**2')">x²</button>
+          <button class="btn-sci-op" onclick="appendSciValue('**')">x^y</button>
           <button class="btn-sci-op" onclick="appendSciValue('%')">%</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
           <button onclick="appendSciValue('6')">6</button>
-          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
 
           <button onclick="appendSciValue('1')">1</button>
           <button onclick="appendSciValue('2')">2</button>
@@ -1564,7 +1549,7 @@
           <button class="btn-sci-eq" onclick="calculateSciResult()">=</button>
         </div>
 
-        <!-- Algebra Panel -->
+        <!-- Algebra (Alphabet / Variables) Panel Added -->
         <div id="sciAlgebra" class="calc-buttons-grid-box calc-panel-sec">
           <button class="btn-sci-var" onclick="appendSciValue('x')">x</button>
           <button class="btn-sci-var" onclick="appendSciValue('y')">y</button>
@@ -1574,17 +1559,17 @@
           <button class="btn-sci-var" onclick="appendSciValue('a')">a</button>
           <button class="btn-sci-var" onclick="appendSciValue('b')">b</button>
           <button class="btn-sci-var" onclick="appendSciValue('c')">c</button>
-          <button class="btn-sci-op" onclick="appendSciValue('²')">²</button>
+          <button class="btn-sci-op" onclick="appendSciValue('**2')">²</button>
 
           <button class="btn-sci-op" onclick="appendSciValue('(')">(</button>
           <button class="btn-sci-op" onclick="appendSciValue(')')">)</button>
-          <button class="btn-sci-op" onclick="appendSciValue('^')">^</button>
-          <button class="btn-sci-op" onclick="appendSciValue('÷')">÷</button>
+          <button class="btn-sci-op" onclick="appendSciValue('**')">^</button>
+          <button class="btn-sci-op" onclick="appendSciValue('/')">÷</button>
 
           <button onclick="appendSciValue('7')">7</button>
           <button onclick="appendSciValue('8')">8</button>
           <button onclick="appendSciValue('9')">9</button>
-          <button class="btn-sci-op" onclick="appendSciValue('×')">×</button>
+          <button class="btn-sci-op" onclick="appendSciValue('*')">×</button>
 
           <button onclick="appendSciValue('4')">4</button>
           <button onclick="appendSciValue('5')">5</button>
@@ -1603,7 +1588,7 @@
         </div>
       </div>
     </div>
- </div>
+  </div>
 
   <!-- Modals Section -->
   <div class="calc-modal" id="ocrModal" onclick="if(event.target === this) closeOcrModal()">
@@ -4939,277 +4924,5 @@ function shareWebsite() {
     }[tag]));
   }
 </script>
-<script> 
- <!-- ================= Voice Command Section ================= -->
-    <div style="padding: 15px; background: #e9ecef; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-        <h3>🎙️ Voice Assistant</h3>
-        <button id="voiceBtn" style="background: #ff4757; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;">Start Voice Command</button>
-        <p id="voiceStatus" style="color: #555; font-weight: bold;">Click the button and say a command...</p>
-        <small>Try saying: <b>"Select Image"</b>, <b>"Merge PDF"</b>, or <b>"Download Image"</b></small>
-    </div>
-
-    <!-- ================= 1. Image Resize Section ================= -->
-    <h2>1. Image Resize & Convert (JPG/PNG)</h2>
-    <input type="file" id="imageInput" accept="image/jpeg, image/png">
-    <br><br>
-    <a id="downloadImage" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; background: #28a745; display: none;">Download Resized Image</a>
-    
-    <hr style="margin: 30px 0;">
-
-    <!-- ================= 2. PDF Merge Section ================= -->
-    <h2>2. PDF Merger</h2>
-    <p>Select two PDFs first, then click Merge or use Voice Command:</p>
-    <input type="file" id="pdfInput1" accept="application/pdf"><br><br>
-    <input type="file" id="pdfInput2" accept="application/pdf"><br><br>
-    <button id="mergePdfBtn" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; border: none; background: #007bff;">Merge PDFs</button>
-    <br><br><a id="downloadPdf" style="padding: 10px 15px; border-radius: 5px; cursor: pointer; color: white; text-decoration: none; background: #dc3545; display: none;">Download Merged PDF</a>
-  </script>
-<script>
-// ================= Maximum File Size Limit (20 MB) =================
-const MAX_FILE_SIZE = 20 * 1024 * 1024; 
-
-// ================= Voice Command (Web Speech API) =================
-const voiceBtn = document.getElementById('voiceBtn');
-const voiceStatus = document.getElementById('voiceStatus');
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (SpeechRecognition) {
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US'; 
-
-    voiceBtn.addEventListener('click', () => {
-        recognition.start();
-        voiceStatus.innerText = "Listening... Speak now 🎤";
-    });
-
-    recognition.onresult = (event) => {
-        const command = event.results[0][0].transcript.toLowerCase();
-        voiceStatus.innerText = `You said: "${command}"`;
-
-        if (command.includes('image') || command.includes('picture')) {
-            document.getElementById('imageInput').click(); 
-        } 
-        else if (command.includes('merge') || command.includes('pdf')) {
-            document.getElementById('mergePdfBtn').click(); 
-        } 
-        else if (command.includes('download image')) {
-            document.getElementById('downloadImage').click(); 
-        } 
-        else if (command.includes('download pdf')) {
-            document.getElementById('downloadPdf').click(); 
-        } 
-        else {
-            voiceStatus.innerText = `Command not recognized: "${command}". Try again.`;
-        }
-    };
-
-    recognition.onerror = () => {
-        voiceStatus.innerText = "Error: Could not hear properly. Try again.";
-    };
-} else {
-    if(voiceBtn) voiceBtn.style.display = 'none';
-    if(voiceStatus) voiceStatus.innerText = "Voice Command is not supported in this browser (Try Chrome).";
-}
-
-// ================= Image Resize Logic =================
-const imageInput = document.getElementById('imageInput');
-const downloadImage = document.getElementById('downloadImage');
-
-if(imageInput) {
-    imageInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (file.size > MAX_FILE_SIZE) return alert('Image size cannot exceed 20 MB.');
-        if (!file.type.match('image.*')) return alert('Please upload a valid image format.');
-
-        try {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    const MAX_WIDTH = 800;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    const resizedImageURL = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    if(downloadImage) {
-                        downloadImage.href = resizedImageURL;
-                        downloadImage.download = 'DocuCraft-resized.jpg';
-                        downloadImage.style.display = 'inline-block';
-                    }
-                    if(voiceStatus) voiceStatus.innerText = "Image resized! Say 'Download Image' to save.";
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        } catch (error) {
-            alert('Error processing image.');
-        }
-    });
-}
-
-// ================= PDF Merge Logic =================
-const pdfInput1 = document.getElementById('pdfInput1');
-const pdfInput2 = document.getElementById('pdfInput2');
-const mergePdfBtn = document.getElementById('mergePdfBtn');
-const downloadPdf = document.getElementById('downloadPdf');
-
-if(mergePdfBtn) {
-    mergePdfBtn.addEventListener('click', async function() {
-        const file1 = pdfInput1 ? pdfInput1.files[0] : null;
-        const file2 = pdfInput2 ? pdfInput2.files[0] : null;
-
-        if (!file1 || !file2) return alert('Please select two PDFs first.');
-        if (file1.size > MAX_FILE_SIZE || file2.size > MAX_FILE_SIZE) return alert('PDF size cannot exceed 20 MB.');
-
-        try {
-            mergePdfBtn.innerText = "Processing...";
-            if(voiceStatus) voiceStatus.innerText = "Merging PDFs... Please wait.";
-
-            const arrayBuffer1 = await file1.arrayBuffer();
-            const arrayBuffer2 = await file2.arrayBuffer();
-
-            const { PDFDocument } = PDFLib;
-            const pdf1 = await PDFDocument.load(arrayBuffer1);
-            const pdf2 = await PDFDocument.load(arrayBuffer2);
-
-            const mergedPdf = await PDFDocument.create();
-
-            const copiedPages1 = await mergedPdf.copyPages(pdf1, pdf1.getPageIndices());
-            copiedPages1.forEach((page) => mergedPdf.addPage(page));
-
-            const copiedPages2 = await mergedPdf.copyPages(pdf2, pdf2.getPageIndices());
-            copiedPages2.forEach((page) => mergedPdf.addPage(page));
-
-            const mergedPdfBytes = await mergedPdf.save();
-            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
-            const objectURL = URL.createObjectURL(blob);
-
-            if(downloadPdf) {
-                downloadPdf.href = objectURL;
-                downloadPdf.download = 'DocuCraft-merged.pdf';
-                downloadPdf.style.display = 'inline-block';
-            }
-            mergePdfBtn.innerText = "Merge PDFs";
-            
-            if(voiceStatus) voiceStatus.innerText = "PDF Merged! Say 'Download PDF' to save.";
-
-        } catch (error) {
-            alert('Error merging PDFs.');
-            mergePdfBtn.innerText = "Merge PDFs";
-        }
-    });
-}
-</script>
- <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const allInputs = document.querySelectorAll('input, textarea');
-
-        allInputs.forEach(input => {
-            // When clicking inside the input (Keyboard opens)
-            input.addEventListener('focus', function() {
-                const parentModal = this.closest('.modal-container');
-                if (parentModal) {
-                    parentModal.classList.add('keyboard-active');
-                }
-            });
-
-            // When clicking outside the input (Keyboard closes)
-            input.addEventListener('blur', function() {
-                const parentModal = this.closest('.modal-container');
-                if (parentModal) {
-                    parentModal.classList.remove('keyboard-active');
-                }
-            });
-        });
-    });
-</script>
- <script>
-    let currentSciExpression = "";
-
-    function appendSciValue(value) {
-        const display = document.getElementById('scientificOutput');
-        // If the screen shows 0 and the new value isn't a decimal or bracket, replace the 0
-        if (display.innerText === "0" && value !== "." && !value.includes('(')) {
-            currentSciExpression = value;
-        } else {
-            currentSciExpression += value;
-        }
-        display.innerText = currentSciExpression;
-    }
-
-    function clearSciScreen() {
-        currentSciExpression = "";
-        document.getElementById('scientificOutput').innerText = "0";
-        document.getElementById('scientificHistory').innerText = "";
-    }
-
-    function sciBackspace() {
-        currentSciExpression = currentSciExpression.slice(0, -1);
-        document.getElementById('scientificOutput').innerText = currentSciExpression || "0";
-    }
-
-    function calculateSciResult() {
-        let expr = currentSciExpression;
-        
-        // Logic to automatically close missing brackets safely
-        const openParens = (expr.match(/\(/g) || []).length;
-        const closeParens = (expr.match(/\)/g) || []).length;
-        if (openParens > closeParens) {
-            expr += ')'.repeat(openParens - closeParens);
-        }
-
-        try {
-            // Convert visual symbols to JavaScript Math functions
-            let cleanExpr = expr
-                .replace(/sin\(/g, 'Math.sin(')
-                .replace(/cos\(/g, 'Math.cos(')
-                .replace(/tan\(/g, 'Math.tan(')
-                .replace(/arcsin\(/g, 'Math.asin(')
-                .replace(/arccos\(/g, 'Math.acos(')
-                .replace(/arctan\(/g, 'Math.atan(')
-                .replace(/ln\(/g, 'Math.log(')
-                .replace(/log\(/g, 'Math.log10(')
-                .replace(/√\(/g, 'Math.sqrt(')
-                .replace(/π/g, 'Math.PI')
-                .replace(/e/g, 'Math.E')
-                .replace(/÷/g, '/')
-                .replace(/×/g, '*')
-                .replace(/\^/g, '**')
-                .replace(/²/g, '**2');
-
-            // Handle algebra variables to prevent errors
-            cleanExpr = cleanExpr.replace(/[x-z]/g, '0').replace(/[a-c]/g, '0');
-
-            let result = eval(cleanExpr);
-            
-            if (!isFinite(result) || isNaN(result)) {
-                throw new Error("Invalid calculation");
-            }
-
-            // Fix long decimal precision issues
-            if(result % 1 !== 0) {
-                result = parseFloat(result.toFixed(8));
-            }
-
-            document.getElementById('scientificHistory').innerText = expr + " =";
-            document.getElementById('scientificOutput').innerText = result;
-            currentSciExpression = result.toString(); 
-
-        } catch (error) {
-            document.getElementById('scientificOutput').innerText = "Error";
-            currentSciExpression = "";
-        }
-    }
-</script>
-</body>
+  </body>
 </html>
