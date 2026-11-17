@@ -1066,3 +1066,97 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+const API_KEY = 'YOUR_API_KEY'; // Insert your API Key here
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+// Function to convert uploaded file to Base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]); 
+        reader.onerror = error => reject(error);
+    });
+}
+
+async function sendMessage() {
+    const inputField = document.getElementById("user-input");
+    const fileInput = document.getElementById("file-input");
+    const chatBox = document.getElementById("chat-box");
+    
+    const userText = inputField.value.trim();
+    const file = fileInput.files[0];
+
+    // Do nothing if both text and file are empty
+    if (!userText && !file) return;
+
+    // Display user message and file name in the chat box
+    let userDisplayMsg = userText;
+    if (file) {
+        userDisplayMsg += `<br><small style="color: #555;">📎 <i>${file.name}</i></small>`;
+    }
+    chatBox.innerHTML += `<p class="user-msg"><b>You:</b> ${userDisplayMsg}</p>`;
+    
+    // Clear inputs
+    inputField.value = ""; 
+    fileInput.value = ""; 
+    
+    // Show loading message
+    chatBox.innerHTML += `<p id="loading" class="ai-msg">AI is typing...</p>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        let parts = [];
+        
+        // Add text prompt
+        if (userText) {
+            parts.push({ text: userText });
+        } else if (file) {
+            // Default prompt if only a file is uploaded without text
+            parts.push({ text: "Please explain what is in this document or image." }); 
+        }
+
+        // Add file data (Base64 format)
+        if (file) {
+            const base64Data = await fileToBase64(file);
+            parts.push({
+                inlineData: {
+                    mimeType: file.type,
+                    data: base64Data
+                }
+            });
+        }
+
+        // Send request to Gemini API
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: parts }]
+            })
+        });
+
+        const data = await response.json();
+        
+        // Handle API errors
+        if(data.error) {
+            throw new Error(data.error.message);
+        }
+
+        // Extract response text
+        const aiText = data.candidates[0].content.parts[0].text;
+        
+        // Format response (replace newlines with <br> for HTML) and display
+        const formattedText = aiText.replace(/\n/g, "<br>");
+        document.getElementById("loading").remove();
+        chatBox.innerHTML += `<p class="ai-msg"><b>AI:</b> ${formattedText}</p>`;
+        
+    } catch (error) {
+        console.error("API Error: ", error);
+        document.getElementById("loading").remove();
+        chatBox.innerHTML += `<p style="color:red;" class="ai-msg"><b>Error:</b> Failed to get a response. Check the console.</p>`;
+    }
+    
+    // Scroll to the bottom
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
