@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
  <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2563eb">
   <!-- ==========================================================================
@@ -598,56 +604,6 @@
       vertical-align: middle;
       transition: transform 0.1s, box-shadow 0.2s;
     }
-   .ai-chat-container {
-    width: 350px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.chat-box {
-    height: 250px;
-    overflow-y: auto;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.user-msg { 
-    align-self: flex-end; 
-    background: #e3f2fd; 
-    padding: 8px; 
-    border-radius: 8px; 
-    margin: 0;
-}
-.ai-msg { 
-    align-self: flex-start; 
-    background: #f1f1f1; 
-    padding: 8px; 
-    border-radius: 8px; 
-    margin: 0;
-}
-.chat-input-area { 
-    display: flex; 
-    gap: 5px; 
-}
-.chat-input-area input[type="text"] { 
-    flex: 1; 
-    padding: 8px; 
-    border: 1px solid #ccc; 
-    border-radius: 5px; 
-}
-.chat-input-area button { 
-    padding: 8px 12px; 
-    background: #007bff; 
-    color: white; 
-    border: none; 
-    border-radius: 5px; 
-    cursor: pointer; 
-}
   </style>
   
   <script>
@@ -663,15 +619,6 @@
   </script>
 </head>
  <body>
-  <div class="ai-chat-container">
-    <div id="chat-box" class="chat-box"></div>
-    <div class="chat-input-area">
-        <!-- File upload button -->
-        <input type="file" id="file-input" accept="image/*, application/pdf" style="max-width: 90px; font-size: 12px;">
-        <input type="text" id="user-input" placeholder="Ask AI anything...">
-        <button onclick="sendMessage()">Send</button>
-    </div>
-</div>
     <!-- 1. Place the HTML element here, outside the script -->
     <div id="networkStatusBanner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; z-index: 99999; transition: all 0.3s ease;"></div>
 
