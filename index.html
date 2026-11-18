@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
+ <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuCraft AI IDE</title>
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -847,6 +853,100 @@
   <main class="main-grid-container">
     <div class="tools-grid" id="toolsGrid">
 
+       <!-- Header -->
+    <div class="top-header">
+        <div class="logo-area">
+            <div class="logo-icon">D C</div>
+            <span>DocuCraft IDE</span>
+        </div>
+        <div class="header-actions">
+            <!-- Run button calls execution logic via srcdoc without infinite loop -->
+            <button class="run-btn" onclick="executeCode()"><i class="fa-solid fa-play"></i> RUN</button>
+        </div>
+    </div>
+
+    <!-- Mobile View Tabs -->
+    <div class="view-tabs" id="mobileViewTabs">
+        <button class="view-tab active" onclick="switchMainView('code')">Code</button>
+        <button class="view-tab" onclick="switchMainView('output')">Output</button>
+    </div>
+
+    <div class="workspace-container">
+        
+        <!-- Editor Section -->
+        <div class="editor-container" id="editorContainer">
+            
+            <div class="file-tabs">
+                <button class="file-tab active" onclick="switchFile('html', this)">
+                    <span style="color:#e44d26;">&lt;&gt;</span> index.html
+                </button>
+                <button class="file-tab" onclick="switchFile('css', this)">
+                    <span style="color:#264de4;">#</span> styles.css
+                </button>
+                <button class="file-tab" onclick="switchFile('js', this)">
+                    <span style="color:#f7df1e;">JS</span> script.js
+                </button>
+            </div>
+            
+            <!-- HTML Editor Wrapper -->
+            <div id="htmlWrapper" class="editor-wrapper active">
+                <div class="line-numbers" id="htmlLineNumbers">1</div>
+                <textarea id="htmlEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('html')" onscroll="syncScroll('html')">
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello, World!</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+      <h1 class="title">Hello World!</h1>
+      <p id="currentTime"></p>
+      <script src="script.js"></script>
+  </body>
+</html>
+</textarea>
+            </div>
+
+            <!-- CSS Editor Wrapper -->
+            <div id="cssWrapper" class="editor-wrapper">
+                <div class="line-numbers" id="cssLineNumbers">1</div>
+                <textarea id="cssEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('css')" onscroll="syncScroll('css')">
+body {
+  padding: 25px;
+}
+.title {
+  color: #5C6AC4;
+}
+</textarea>
+            </div>
+
+            <!-- JS Editor Wrapper -->
+            <div id="jsWrapper" class="editor-wrapper">
+                <div class="line-numbers" id="jsLineNumbers">1</div>
+                <textarea id="jsEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('js')" onscroll="syncScroll('js')">
+function showTime() {
+    document.getElementById('currentTime').innerHTML = new Date().toUTCString();
+}
+showTime();
+setInterval(function () {
+    showTime();
+}, 1000);
+</textarea>
+            </div>
+            
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-container" id="outputContainer">
+            <div style="padding: 8px 15px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa; font-size: 14px; font-weight: bold; color: #333;">
+                <i class="fa-solid fa-desktop"></i> Live Output
+            </div>
+            <!-- Empty iframe to be filled by srcdoc -->
+            <iframe id="resultFrame" class="output-iframe"></iframe>
+        </div>
+
+    </div>
+     
       <!-- Scientific Calculator Card Added -->
       <div class="tool-card" data-cat="finance" onclick="openScientificCalcModal()">
         <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;"><i class="fa-solid fa-calculator"></i></div>
@@ -4892,5 +4992,110 @@ function shareWebsite() {
     }[tag]));
   }
 </script>
+  <script>
+        // Track the current active file
+        let currentFile = 'html';
+
+        function switchFile(type, btnElement) {
+            currentFile = type;
+            
+            // Update tabs visually
+            document.querySelectorAll('.file-tab').forEach(tab => tab.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            // Switch Textarea Wrappers
+            document.querySelectorAll('.editor-wrapper').forEach(wrapper => wrapper.classList.remove('active'));
+            document.getElementById(type + 'Wrapper').classList.add('active');
+            
+            updateLineNumbers(type);
+        }
+
+        // Update line numbers based on textarea content
+        function updateLineNumbers(type) {
+            const textarea = document.getElementById(type + 'Editor');
+            const lines = textarea.value.split('\n').length;
+            const lineNumbersDiv = document.getElementById(type + 'LineNumbers');
+            
+            let numbersHtml = '';
+            for (let i = 1; i <= lines; i++) {
+                numbersHtml += i + '<br>';
+            }
+            lineNumbersDiv.innerHTML = numbersHtml;
+        }
+
+        // Sync scroll between textarea and line numbers
+        function syncScroll(type) {
+            const textarea = document.getElementById(type + 'Editor');
+            const lineNumbersDiv = document.getElementById(type + 'LineNumbers');
+            lineNumbersDiv.scrollTop = textarea.scrollTop;
+        }
+
+        function switchMainView(view) {
+            const tabs = document.querySelectorAll('.view-tab');
+            tabs[0].classList.toggle('active', view === 'code');
+            tabs[1].classList.toggle('active', view === 'output');
+
+            const editor = document.getElementById('editorContainer');
+            const output = document.getElementById('outputContainer');
+
+            if (window.innerWidth <= 768) {
+                if (view === 'code') {
+                    editor.classList.remove('hidden-mobile-view');
+                    output.classList.remove('active-mobile-view');
+                } else {
+                    editor.classList.add('hidden-mobile-view');
+                    output.classList.add('active-mobile-view');
+                }
+            }
+        }
+
+        function executeCode() {
+            const htmlContent = document.getElementById('htmlEditor').value;
+            const cssContent = document.getElementById('cssEditor').value;
+            const jsContent = document.getElementById('jsEditor').value;
+
+            // Combine code properly
+            let finalHtml = htmlContent;
+            const styleTag = "<style>" + cssContent + "</style>";
+            const scriptTag = "<script>" + jsContent + "<\/script>";
+
+            if (finalHtml.includes('</head>')) {
+                finalHtml = finalHtml.replace('</head>', styleTag + '</head>');
+            } else {
+                finalHtml = styleTag + finalHtml;
+            }
+
+            if (finalHtml.includes('</body>')) {
+                finalHtml = finalHtml.replace('</body>', scriptTag + '</body>');
+            } else {
+                finalHtml += scriptTag;
+            }
+
+            // Using srcdoc to execute code safely without infinite loops or external iframe interference
+            const iframe = document.getElementById('resultFrame');
+            iframe.srcdoc = finalHtml;
+            
+            // Switch to output view automatically on mobile
+            if (window.innerWidth <= 768) {
+                switchMainView('output');
+            }
+        }
+
+        // Initialize line numbers on load
+        window.onload = function() {
+            updateLineNumbers('html');
+            updateLineNumbers('css');
+            updateLineNumbers('js');
+        };
+
+        // We only initialize basic event listeners here.
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('editorContainer').classList.remove('hidden-mobile-view');
+                document.getElementById('outputContainer').classList.remove('active-mobile-view');
+            }
+        });
+        
+    </script>
   </body>
 </html>
