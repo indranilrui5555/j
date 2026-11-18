@@ -1,57 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>
-    /* DocuCraft IDE CSS */
-    .docucraft-ide-container {
-        --bg-color: #ffffff;
-        --header-bg: #f8f9fa;
-        --border-color: #e0e0e0;
-        --text-primary: #333;
-        --text-secondary: #666;
-        --primary-blue: #007bff;
-        --run-btn-bg: #e91e63;
-        --editor-bg: #ffffff;
-        
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background-color: var(--bg-color);
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        min-height: 500px;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .docucraft-ide-container * { box-sizing: border-box; }
-    .docucraft-ide-container .top-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); }
-    .docucraft-ide-container .logo-area { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: bold; color: #2563eb; }
-    .docucraft-ide-container .logo-icon { width: 32px; height: 32px; background: #2563eb; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-    .docucraft-ide-container .run-btn { background-color: var(--run-btn-bg); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-    .docucraft-ide-container .run-btn:hover { background-color: #d81b60; }
-    .docucraft-ide-container .view-tabs { display: flex; border-bottom: 1px solid var(--border-color); background-color: var(--header-bg); }
-    .docucraft-ide-container .view-tab { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--text-secondary); }
-    .docucraft-ide-container .view-tab.active { color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); }
-    .docucraft-ide-container .workspace-container { display: flex; flex: 1; overflow: hidden; min-height: 400px; }
-    .docucraft-ide-container .editor-container, .docucraft-ide-container .output-container { flex: 1; display: flex; flex-direction: column; height: 100%; }
-    .docucraft-ide-container .file-tabs { display: flex; border-bottom: 1px solid var(--border-color); background-color: #f1f3f4; overflow-x: auto; }
-    .docucraft-ide-container .file-tab { padding: 8px 16px; border: none; background: none; cursor: pointer; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 5px; border-right: 1px solid var(--border-color); white-space: nowrap; }
-    .docucraft-ide-container .file-tab.active { background-color: var(--editor-bg); color: var(--text-primary); border-top: 2px solid var(--primary-blue); }
-    .docucraft-ide-container .code-textarea { flex: 1; width: 100%; height: 100%; padding: 15px; border: none; outline: none; resize: none; font-family: monospace; font-size: 14px; color: #333; background-color: var(--editor-bg); display: none; }
-    .docucraft-ide-container .code-textarea.active { display: block; }
-    .docucraft-ide-container .output-iframe { flex: 1; border: none; width: 100%; height: 100%; background-color: white; }
-    @media (max-width: 768px) {
-        .docucraft-ide-container .workspace-container { flex-direction: column; }
-        .docucraft-ide-container .output-container { display: none; }
-        .docucraft-ide-container .output-container.active-mobile-view { display: flex; }
-        .docucraft-ide-container .editor-container.hidden-mobile-view { display: none; }
-    }
-    @media (min-width: 769px) {
-        .docucraft-ide-container .view-tabs { display: none !important; }
-        .docucraft-ide-container .editor-container { border-right: 1px solid var(--border-color); }
-    }
-</style>
  <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -906,6 +855,26 @@
         <span class="tool-meta">Open Calculator &rarr;</span>
       </div>
 
+      <!-- PDF Scanner & Enhancer -->
+<div class="tool-card" data-cat="document" onclick="openPdfScannerModal()">
+  <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;">
+    <i class="fa-solid fa-scanner"></i>
+  </div>
+  <h3>PDF Scanner & Enhancer <span class="badge-new">NEW</span></h3>
+  <p>Scan documents using camera or upload photos to enhance and convert into clear PDF.</p>
+  <span class="tool-meta">Open Scanner &rarr;</span>
+</div>
+
+<!-- ZIP to PDF Converter -->
+<div class="tool-card" data-cat="toPdf" onclick="openZipToPdfModal()">
+  <div class="tool-icon" style="background:#fef3c7; color:#d97706;">
+    <i class="fa-solid fa-file-zipper"></i>
+  </div>
+  <h3>ZIP to PDF Converter <span class="badge-new">NEW</span></h3>
+  <p>Upload a ZIP archive containing images or docs and convert them into a single PDF.</p>
+  <span class="tool-meta">Open ZIP to PDF &rarr;</span>
+</div>
+      
       <div class="tool-card" data-cat="utility" onclick="openDocTranslatorModal()">
         <div class="tool-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fa-solid fa-language"></i></div>
         <h3>DocuCraft AI Translator <span class="badge-new">NEW</span></h3>
@@ -991,6 +960,46 @@
         <span class="tool-meta">Open Tool &rarr;</span>
       </div>
 
+<!-- Word to PDF -->
+<div class="tool-card" data-cat="toPdf" onclick="launchTool('wordpdf')">
+  <div class="tool-icon" style="background:#dbeafe; color:#2563eb;">
+    <i class="fa-solid fa-file-word"></i>
+  </div>
+  <h3>Word to PDF <span class="badge-new">NEW</span></h3>
+  <p>Convert DOC/DOCX files securely into professional PDF format.</p>
+  <span class="tool-meta">Open Tool &rarr;</span>
+</div>
+
+<!-- Excel to PDF -->
+<div class="tool-card" data-cat="toPdf" onclick="launchTool('excelpdf')">
+  <div class="tool-icon" style="background:#ecfdf5; color:#059669;">
+    <i class="fa-solid fa-file-excel"></i>
+  </div>
+  <h3>Excel to PDF <span class="badge-new">NEW</span></h3>
+  <p>Convert XLS/XLSX spreadsheets into print-ready PDF documents.</p>
+  <span class="tool-meta">Open Tool &rarr;</span>
+</div>
+
+<!-- PowerPoint to PDF -->
+<div class="tool-card" data-cat="toPdf" onclick="launchTool('pptpdf')">
+  <div class="tool-icon" style="background:#fef3c7; color:#d97706;">
+    <i class="fa-solid fa-file-powerpoint"></i>
+  </div>
+  <h3>PowerPoint to PDF <span class="badge-new">NEW</span></h3>
+  <p>Convert PPT/PPTX presentation slides into PDF files.</p>
+  <span class="tool-meta">Open Tool &rarr;</span>
+</div>
+
+<!-- HTML to PDF -->
+<div class="tool-card" data-cat="toPdf" onclick="launchTool('htmlpdf')">
+  <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;">
+    <i class="fa-solid fa-globe"></i>
+  </div>
+  <h3>HTML to PDF <span class="badge-new">NEW</span></h3>
+  <p>Convert HTML text content or web markup directly into PDF.</p>
+  <span class="tool-meta">Open Tool &rarr;</span>
+</div>
+      
       <div class="tool-card" data-cat="toPdf" onclick="launchTool('pngpdf')">
         <div class="tool-icon" style="background:#fee2e2; color:#e5322d;"><i class="fa-solid fa-file-image"></i></div>
         <h3>PNG to PDF <span class="badge-new">NEW</span></h3>
