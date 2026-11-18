@@ -49,7 +49,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js?v=3"></script>
  <link rel="stylesheet" href="style.css?v=3">
-  
+ 
+<style>
+  /* Basic Card Styling */
+  .tool-card { background: #2a2a40; padding: 20px; border-radius: 12px; margin-bottom: 20px; cursor: pointer; transition: 0.3s; color: white; }
+  .tool-card:hover { transform: translateY(-5px); }
+  .tool-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 10px; }
+  .badge-new { background: #ef4444; color: white; padding: 2px 6px; font-size: 10px; border-radius: 4px; vertical-align: middle; margin-left: 5px; }
+  .tool-meta { display: inline-block; margin-top: 10px; font-weight: bold; cursor: pointer; }
+
+  /* Modal Styling */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-content { background: #fff; color: #333; width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; position: relative; text-align: center; }
+  .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; border: none; background: transparent; }
+  .file-upload-box { border: 2px dashed #cbd5e1; padding: 30px 20px; border-radius: 12px; margin: 20px 0; cursor: pointer; background: #f8fafc; transition: 0.2s; display: block; }
+  .file-upload-box:hover { background: #f1f5f9; border-color: #94a3b8; }
+  .file-upload-box i { font-size: 32px; margin-bottom: 10px; }
+  .file-status { margin-top: 10px; font-size: 14px; font-weight: bold; color: #16a34a; }
+  .generate-btn { background: #0284c7; color: #fff; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+  .generate-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  input[type="file"] { display: none; }
+</style>
   <style>
    /* Floating Button */
 .ai-floating-btn {
@@ -730,6 +750,60 @@
   </script>
 </head>
  <body>
+  <!-- UI CARDS -->
+<div class="tool-card" onclick="openModal('pdfScannerModal')">
+  <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;">
+    <i class="fa-solid fa-camera"></i>
+  </div>
+  <h3>PDF Scanner & Enhancer <span class="badge-new">NEW</span></h3>
+  <p>Scan documents using camera or upload photos to enhance and convert into clear PDF.</p>
+  <span class="tool-meta" style="color:#0284c7;">Open Scanner &rarr;</span>
+</div>
+
+<div class="tool-card" onclick="openModal('zipToPdfModal')">
+  <div class="tool-icon" style="background:#fef3c7; color:#d97706;">
+    <i class="fa-solid fa-file-zipper"></i>
+  </div>
+  <h3>ZIP to PDF Converter <span class="badge-new">NEW</span></h3>
+  <p>Upload a ZIP archive containing images or docs and convert them into a single PDF.</p>
+  <span class="tool-meta" style="color:#d97706;">Open ZIP to PDF &rarr;</span>
+</div>
+
+<!-- 1. PDF Scanner Modal -->
+<div id="pdfScannerModal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('pdfScannerModal')">&times;</button>
+    <h3>PDF Scanner & Enhancer</h3>
+    <p style="font-size: 13px; color: #666;">Upload Document Images (Max 500 MB)</p>
+    
+    <label class="file-upload-box">
+      <input type="file" id="imageInput" accept="image/*" multiple onchange="updateFileStatus('imageInput', 'imageStatus')">
+      <i class="fa-solid fa-camera" style="color:#0284c7;"></i>
+      <p>Tap to select images for scan</p>
+      <div id="imageStatus" class="file-status"></div>
+    </label>
+    
+    <button class="generate-btn" id="btnGenerateScanner" onclick="processImagesToPdf()">Generate Scanned PDF</button>
+  </div>
+</div>
+
+<!-- 2. ZIP to PDF Modal -->
+<div id="zipToPdfModal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('zipToPdfModal')">&times;</button>
+    <h3>ZIP to PDF Converter</h3>
+    <p style="font-size: 13px; color: #666;">Upload ZIP Archive (up to 500 MB)</p>
+    
+    <label class="file-upload-box">
+      <input type="file" id="zipInput" accept=".zip" onchange="updateFileStatus('zipInput', 'zipStatus')">
+      <i class="fa-solid fa-file-zipper" style="color:#d97706;"></i>
+      <p>Tap to select your ZIP file</p>
+      <div id="zipStatus" class="file-status"></div>
+    </label>
+    
+    <button class="generate-btn" id="btnGenerateZip" onclick="processZipToPdf()">Extract & Generate PDF</button>
+  </div>
+</div>
     <!-- 1. Place the HTML element here, outside the script -->
     <div id="networkStatusBanner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; z-index: 99999; transition: all 0.3s ease;"></div>
 
@@ -5433,5 +5507,7 @@ aiInput.addEventListener('keypress', (e) => {
     <button id="ai-send" class="send-btn">➤</button>
   </div>
 </div>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   </body>
 </html>
