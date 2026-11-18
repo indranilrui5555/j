@@ -1941,6 +1941,113 @@ async function generateResumeDownload() {
   }
 }
 
+// ==========================================
+    // FIXED: Word to PDF & Excel to PDF execution 
+    // ==========================================
+    } else if (activeTool === 'wordToPdf') {
+        setProgress(30, 'Reading Word Document...');
+        const mammoth = await ensureMammothLoaded();
+        const html2pdf = await ensureHtml2PdfLoaded();
+        if (!mammoth || !html2pdf) throw new Error('Failed to load Word conversion libraries.');
+        
+        const arrayBuffer = await selectedFiles[0].arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.style.padding = '40px';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        tempDiv.style.color = '#000';
+        tempDiv.style.background = '#ffffff'; // Added background
+        tempDiv.innerHTML = result.value;
+        
+        // FIX: Attach to DOM invisibly so it can be captured
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.width = '800px';
+        document.body.appendChild(tempDiv);
+        
+        setProgress(70, 'Generating PDF Document...');
+        const opt = {
+            margin: 15,
+            filename: selectedFiles[0].name.replace(/\.[^/.]+$/, "") + '_Converted.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await html2pdf().set(opt).from(tempDiv).save();
+        document.body.removeChild(tempDiv); // Cleanup
+        showSuccessPopup('Word Document Converted Successfully!');
+        
+    } else if (activeTool === 'excelToPdf') {
+        setProgress(30, 'Reading Excel Spreadsheet...');
+        const XLSX = await ensureXlsxLoaded();
+        const html2pdf = await ensureHtml2PdfLoaded();
+        if (!XLSX || !html2pdf) throw new Error('Failed to load Excel conversion libraries.');
+        
+        const arrayBuffer = await selectedFiles[0].arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        const htmlString = XLSX.utils.sheet_to_html(worksheet);
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.style.padding = '20px';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        tempDiv.style.background = '#ffffff'; // Added background
+        tempDiv.innerHTML = `<style>table { border-collapse: collapse; width: 100%; margin-bottom: 20px; } th, td { border: 1px solid #333; padding: 6px; font-size: 11px; text-align: left; } th { background-color: #f1f5f9; font-weight: bold; }</style>` + htmlString;
+        
+        // FIX: Attach to DOM invisibly
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.width = '1120px';
+        document.body.appendChild(tempDiv);
+        
+        setProgress(70, 'Generating PDF Spreadsheet...');
+        const opt = {
+            margin: 10,
+            filename: selectedFiles[0].name.replace(/\.[^/.]+$/, "") + '_Converted.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        await html2pdf().set(opt).from(tempDiv).save();
+        document.body.removeChild(tempDiv); // Cleanup
+        showSuccessPopup('Excel Spreadsheet Converted Successfully!');
+
+    } else if (activeTool === 'htmlToPdf') {
+        setProgress(30, 'Reading HTML file...');
+        const htmlText = await selectedFiles[0].text();
+        const html2pdf = await ensureHtml2PdfLoaded();
+        if (!html2pdf) throw new Error('Failed to load PDF library.');
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlText; 
+        tempDiv.style.background = '#ffffff';
+        
+        // FIX: Attach to DOM invisibly
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.width = '800px';
+        document.body.appendChild(tempDiv);
+        
+        setProgress(70, 'Generating PDF from HTML...');
+        const opt = {
+            margin: 10,
+            filename: selectedFiles[0].name.replace(/\.[^/.]+$/, "") + '_Converted.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await html2pdf().set(opt).from(tempDiv).save();
+        document.body.removeChild(tempDiv); // Cleanup
+        showSuccessPopup('HTML Converted to PDF Successfully!');
+
+    } else if (['pptToPdf', 'pdfToWord', 'pdfToExcel', 'pdfToPpt'].includes(activeTool)) {
+
 window.addEventListener('online', updatePrivacyStatus);
 window.addEventListener('offline', updatePrivacyStatus);
 updatePrivacyStatus();
