@@ -692,66 +692,7 @@
     </script>
 </body>
 <body id="pageBody">
-<!-- DocuCraft AI IDE Box -->
-<div class="docucraft-ide-container">
-    <div class="top-header">
-        <div class="logo-area">
-            <div class="logo-icon">D C</div>
-            <span>DocuCraft IDE</span>
-        </div>
-        <button class="run-btn" onclick="executeDocuCraftIDE()"><i class="fa-solid fa-play"></i> RUN</button>
-    </div>
 
-    <div class="view-tabs" id="mobileViewTabs">
-        <button class="view-tab active" onclick="switchMainViewIDE('code')">Code</button>
-        <button class="view-tab" onclick="switchMainViewIDE('output')">Output</button>
-    </div>
-
-    <div class="workspace-container">
-        <!-- Editor Section -->
-        <div class="editor-container" id="editorContainerIDE">
-            <div class="file-tabs">
-                <button class="file-tab active" onclick="switchFileIDE('html', this)"><span style="color:#e44d26;">&lt;&gt;</span> index.html</button>
-                <button class="file-tab" onclick="switchFileIDE('css', this)"><span style="color:#264de4;">#</span> styles.css</button>
-                <button class="file-tab" onclick="switchFileIDE('js', this)"><span style="color:#f7df1e;">JS</span> script.js</button>
-            </div>
-            
-            <textarea id="htmlEditorIDE" class="code-textarea active" spellcheck="false" placeholder="<!-- Write HTML -->">
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Hello World!</title>
-  </head>
-  <body>
-      <h1 class="title">Welcome to DocuCraft AI!</h1>
-      <p>This code editor is ready to use.</p>
-  </body>
-</html></textarea>
-
-            <textarea id="cssEditorIDE" class="code-textarea" spellcheck="false" placeholder="/* Write CSS */">
-body {
-  padding: 25px;
-  font-family: sans-serif;
-  text-align: center;
-  background-color: #f3f4f6;
-}
-.title { color: #2563eb; }
-</textarea>
-
-            <textarea id="jsEditorIDE" class="code-textarea" spellcheck="false" placeholder="// Write JavaScript">
-console.log("JS is working!");
-</textarea>
-        </div>
-
-        <!-- Output Section -->
-        <div class="output-container" id="outputContainerIDE">
-            <div style="padding: 8px 15px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa; font-size: 14px; font-weight: bold; color: #333;">
-                <i class="fa-solid fa-desktop"></i> Live Output
-            </div>
-            <iframe id="resultFrameIDE" class="output-iframe"></iframe>
-        </div>
-    </div>
-</div>
   <header>
    <div id="autoToolsContainer" class="tools-list-container"></div>
     <div class="nav-container">
@@ -1166,7 +1107,55 @@ console.log("JS is working!");
         <p>Create, customize and download professional employment resumes instantly.</p>
         <span class="tool-meta">Open Resume Maker &rarr;</span>
       </div>
+<!-- DocuCraft AI IDE Box -->
+<div class="docucraft-ide-container">
+    <div class="top-header">
+        <div class="logo-area">
+            <div class="logo-icon">D C</div>
+            <span>DocuCraft IDE</span>
+        </div>
+        <button class="run-btn" onclick="executeDocuCraftIDE()"><i class="fa-solid fa-play"></i> RUN</button>
+    </div>
 
+    <div class="view-tabs" id="mobileViewTabs">
+        <button class="view-tab active" onclick="switchMainViewIDE('code')">Code</button>
+        <button class="view-tab" onclick="switchMainViewIDE('output')">Output</button>
+    </div>
+
+    <div class="workspace-container">
+        <!-- Editor Section -->
+        <div class="editor-container" id="editorContainerIDE">
+            <div class="file-tabs">
+                <button class="file-tab active" onclick="switchFileIDE('html', this)"><span style="color:#e44d26;">&lt;&gt;</span> index.html</button>
+                <button class="file-tab" onclick="switchFileIDE('css', this)"><span style="color:#264de4;">#</span> styles.css</button>
+                <button class="file-tab" onclick="switchFileIDE('js', this)"><span style="color:#f7df1e;">JS</span> script.js</button>
+            </div>
+            
+            <textarea id="htmlEditorIDE" class="code-textarea active" spellcheck="false" placeholder="<!-- Write HTML -->">
+            <textarea id="cssEditorIDE" class="code-textarea" spellcheck="false" placeholder="/* Write CSS */">
+body {
+  padding: 25px;
+  font-family: sans-serif;
+  text-align: center;
+  background-color: #f3f4f6;
+}
+.title { color: #2563eb; }
+</textarea>
+
+            <textarea id="jsEditorIDE" class="code-textarea" spellcheck="false" placeholder="// Write JavaScript">
+console.log("JS is working!");
+</textarea>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-container" id="outputContainerIDE">
+            <div style="padding: 8px 15px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa; font-size: 14px; font-weight: bold; color: #333;">
+                <i class="fa-solid fa-desktop"></i> Live Output
+            </div>
+            <iframe id="resultFrameIDE" class="output-iframe"></iframe>
+        </div>
+    </div>
+</div>
       <!-- Prescription Maker Tool Card Added -->
       <div class="tool-card" data-cat="generator" onclick="openPrescriptionMakerModal()">
         <div class="tool-icon" style="background:#e0f2fe; color:#059669;"><i class="fa-solid fa-notes-medical"></i></div>
