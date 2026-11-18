@@ -1,7 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
+  <style>
+    /* DocuCraft IDE CSS */
+    .docucraft-ide-container {
+        --bg-color: #ffffff;
+        --header-bg: #f8f9fa;
+        --border-color: #e0e0e0;
+        --text-primary: #333;
+        --text-secondary: #666;
+        --primary-blue: #007bff;
+        --run-btn-bg: #e91e63;
+        --editor-bg: #ffffff;
+        
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .docucraft-ide-container * { box-sizing: border-box; }
+    .docucraft-ide-container .top-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); }
+    .docucraft-ide-container .logo-area { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: bold; color: #2563eb; }
+    .docucraft-ide-container .logo-icon { width: 32px; height: 32px; background: #2563eb; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+    .docucraft-ide-container .run-btn { background-color: var(--run-btn-bg); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+    .docucraft-ide-container .run-btn:hover { background-color: #d81b60; }
+    .docucraft-ide-container .view-tabs { display: flex; border-bottom: 1px solid var(--border-color); background-color: var(--header-bg); }
+    .docucraft-ide-container .view-tab { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--text-secondary); }
+    .docucraft-ide-container .view-tab.active { color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); }
+    .docucraft-ide-container .workspace-container { display: flex; flex: 1; overflow: hidden; min-height: 400px; }
+    .docucraft-ide-container .editor-container, .docucraft-ide-container .output-container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+    .docucraft-ide-container .file-tabs { display: flex; border-bottom: 1px solid var(--border-color); background-color: #f1f3f4; overflow-x: auto; }
+    .docucraft-ide-container .file-tab { padding: 8px 16px; border: none; background: none; cursor: pointer; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 5px; border-right: 1px solid var(--border-color); white-space: nowrap; }
+    .docucraft-ide-container .file-tab.active { background-color: var(--editor-bg); color: var(--text-primary); border-top: 2px solid var(--primary-blue); }
+    .docucraft-ide-container .code-textarea { flex: 1; width: 100%; height: 100%; padding: 15px; border: none; outline: none; resize: none; font-family: monospace; font-size: 14px; color: #333; background-color: var(--editor-bg); display: none; }
+    .docucraft-ide-container .code-textarea.active { display: block; }
+    .docucraft-ide-container .output-iframe { flex: 1; border: none; width: 100%; height: 100%; background-color: white; }
+    @media (max-width: 768px) {
+        .docucraft-ide-container .workspace-container { flex-direction: column; }
+        .docucraft-ide-container .output-container { display: none; }
+        .docucraft-ide-container .output-container.active-mobile-view { display: flex; }
+        .docucraft-ide-container .editor-container.hidden-mobile-view { display: none; }
+    }
+    @media (min-width: 769px) {
+        .docucraft-ide-container .view-tabs { display: none !important; }
+        .docucraft-ide-container .editor-container { border-right: 1px solid var(--border-color); }
+    }
+</style>
+ <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-T5993B9C"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -65,229 +116,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js?v=3"></script>
  <link rel="stylesheet" href="style.css?v=3">
-     <style>
-        :root {
-            --bg-color: #ffffff;
-            --header-bg: #f8f9fa;
-            --border-color: #e0e0e0;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --primary-blue: #007bff;
-            --run-btn-bg: #e91e63;
-            --editor-bg: #ffffff;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Top Header */
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 16px;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--bg-color);
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #2563eb;
-        }
-        
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: #2563eb;
-            color: white;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .run-btn {
-            background-color: var(--run-btn-bg);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* Mobile View Tabs (Code / Output) */
-        .view-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--header-bg);
-        }
-
-        .view-tab {
-            padding: 10px 20px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .view-tab.active {
-            color: var(--primary-blue);
-            border-bottom: 2px solid var(--primary-blue);
-        }
-
-        /* Workspace and Split Containers */
-        .workspace-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-        
-        .editor-container, .output-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        /* Mobile View */
-        @media (max-width: 768px) {
-            .workspace-container {
-                flex-direction: column;
-            }
-            .output-container {
-                display: none;
-            }
-            .output-container.active-mobile-view {
-                display: flex;
-            }
-            .editor-container.hidden-mobile-view {
-                display: none;
-            }
-        }
-        
-        /* Desktop View */
-        @media (min-width: 769px) {
-            #mobileViewTabs {
-                display: none;
-            }
-            .editor-container {
-                border-right: 1px solid var(--border-color);
-            }
-        }
-
-        /* File Tabs */
-        .file-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            background-color: #f1f3f4;
-            overflow-x: auto;
-        }
-
-        .file-tab {
-            padding: 8px 16px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            border-right: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .file-tab.active {
-            background-color: var(--editor-bg);
-            color: var(--text-primary);
-            border-top: 2px solid var(--primary-blue);
-        }
-
-        /* Editor Wrapper with Line Numbers */
-        .editor-wrapper {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            background-color: var(--editor-bg);
-            position: relative;
-            display: none; /* Hide all wrappers by default */
-        }
-        
-        .editor-wrapper.active {
-            display: flex; /* Show only active wrapper */
-        }
-
-        .line-numbers {
-            width: 40px;
-            padding: 15px 0;
-            background-color: #f8f9fa;
-            color: #999;
-            text-align: right;
-            padding-right: 10px;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 21px; /* Must match textarea line-height */
-            overflow-y: hidden; /* Synced with textarea scroll */
-            user-select: none;
-            border-right: 1px solid var(--border-color);
-        }
-
-        /* Textarea Code Editors */
-        .code-textarea {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            padding: 15px 10px;
-            border: none;
-            outline: none;
-            resize: none;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 21px; /* Must match line-numbers line-height */
-            color: #333;
-            background-color: var(--editor-bg);
-            box-sizing: border-box;
-            white-space: pre;
-            overflow-wrap: normal;
-            overflow-x: auto;
-            overflow-y: auto;
-        }
-
-        /* Output Frame */
-        .output-iframe {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-        }
-
-    </style>
+  
   <style>
     /* Resize only the header buttons (leaves the login form buttons intact) */
     header div[style*="gap"] button, 
@@ -863,7 +692,66 @@
     </script>
 </body>
 <body id="pageBody">
+<!-- DocuCraft AI IDE Box -->
+<div class="docucraft-ide-container">
+    <div class="top-header">
+        <div class="logo-area">
+            <div class="logo-icon">D C</div>
+            <span>DocuCraft IDE</span>
+        </div>
+        <button class="run-btn" onclick="executeDocuCraftIDE()"><i class="fa-solid fa-play"></i> RUN</button>
+    </div>
 
+    <div class="view-tabs" id="mobileViewTabs">
+        <button class="view-tab active" onclick="switchMainViewIDE('code')">Code</button>
+        <button class="view-tab" onclick="switchMainViewIDE('output')">Output</button>
+    </div>
+
+    <div class="workspace-container">
+        <!-- Editor Section -->
+        <div class="editor-container" id="editorContainerIDE">
+            <div class="file-tabs">
+                <button class="file-tab active" onclick="switchFileIDE('html', this)"><span style="color:#e44d26;">&lt;&gt;</span> index.html</button>
+                <button class="file-tab" onclick="switchFileIDE('css', this)"><span style="color:#264de4;">#</span> styles.css</button>
+                <button class="file-tab" onclick="switchFileIDE('js', this)"><span style="color:#f7df1e;">JS</span> script.js</button>
+            </div>
+            
+            <textarea id="htmlEditorIDE" class="code-textarea active" spellcheck="false" placeholder="<!-- Write HTML -->">
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World!</title>
+  </head>
+  <body>
+      <h1 class="title">Welcome to DocuCraft AI!</h1>
+      <p>This code editor is ready to use.</p>
+  </body>
+</html></textarea>
+
+            <textarea id="cssEditorIDE" class="code-textarea" spellcheck="false" placeholder="/* Write CSS */">
+body {
+  padding: 25px;
+  font-family: sans-serif;
+  text-align: center;
+  background-color: #f3f4f6;
+}
+.title { color: #2563eb; }
+</textarea>
+
+            <textarea id="jsEditorIDE" class="code-textarea" spellcheck="false" placeholder="// Write JavaScript">
+console.log("JS is working!");
+</textarea>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-container" id="outputContainerIDE">
+            <div style="padding: 8px 15px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa; font-size: 14px; font-weight: bold; color: #333;">
+                <i class="fa-solid fa-desktop"></i> Live Output
+            </div>
+            <iframe id="resultFrameIDE" class="output-iframe"></iframe>
+        </div>
+    </div>
+</div>
   <header>
    <div id="autoToolsContainer" class="tools-list-container"></div>
     <div class="nav-container">
@@ -1069,100 +957,6 @@
   <main class="main-grid-container">
     <div class="tools-grid" id="toolsGrid">
 
-       <!-- Header -->
-    <div class="top-header">
-        <div class="logo-area">
-            <div class="logo-icon">D C</div>
-            <span>DocuCraft IDE</span>
-        </div>
-        <div class="header-actions">
-            <!-- Run button calls execution logic via srcdoc without infinite loop -->
-            <button class="run-btn" onclick="executeCode()"><i class="fa-solid fa-play"></i> RUN</button>
-        </div>
-    </div>
-
-    <!-- Mobile View Tabs -->
-    <div class="view-tabs" id="mobileViewTabs">
-        <button class="view-tab active" onclick="switchMainView('code')">Code</button>
-        <button class="view-tab" onclick="switchMainView('output')">Output</button>
-    </div>
-
-    <div class="workspace-container">
-        
-        <!-- Editor Section -->
-        <div class="editor-container" id="editorContainer">
-            
-            <div class="file-tabs">
-                <button class="file-tab active" onclick="switchFile('html', this)">
-                    <span style="color:#e44d26;">&lt;&gt;</span> index.html
-                </button>
-                <button class="file-tab" onclick="switchFile('css', this)">
-                    <span style="color:#264de4;">#</span> styles.css
-                </button>
-                <button class="file-tab" onclick="switchFile('js', this)">
-                    <span style="color:#f7df1e;">JS</span> script.js
-                </button>
-            </div>
-            
-            <!-- HTML Editor Wrapper -->
-            <div id="htmlWrapper" class="editor-wrapper active">
-                <div class="line-numbers" id="htmlLineNumbers">1</div>
-                <textarea id="htmlEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('html')" onscroll="syncScroll('html')">
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Hello, World!</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-      <h1 class="title">Hello World!</h1>
-      <p id="currentTime"></p>
-      <script src="script.js"></script>
-  </body>
-</html>
-</textarea>
-            </div>
-
-            <!-- CSS Editor Wrapper -->
-            <div id="cssWrapper" class="editor-wrapper">
-                <div class="line-numbers" id="cssLineNumbers">1</div>
-                <textarea id="cssEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('css')" onscroll="syncScroll('css')">
-body {
-  padding: 25px;
-}
-.title {
-  color: #5C6AC4;
-}
-</textarea>
-            </div>
-
-            <!-- JS Editor Wrapper -->
-            <div id="jsWrapper" class="editor-wrapper">
-                <div class="line-numbers" id="jsLineNumbers">1</div>
-                <textarea id="jsEditor" class="code-textarea" spellcheck="false" wrap="off" oninput="updateLineNumbers('js')" onscroll="syncScroll('js')">
-function showTime() {
-    document.getElementById('currentTime').innerHTML = new Date().toUTCString();
-}
-showTime();
-setInterval(function () {
-    showTime();
-}, 1000);
-</textarea>
-            </div>
-            
-        </div>
-
-        <!-- Output Section -->
-        <div class="output-container" id="outputContainer">
-            <div style="padding: 8px 15px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa; font-size: 14px; font-weight: bold; color: #333;">
-                <i class="fa-solid fa-desktop"></i> Live Output
-            </div>
-            <!-- Empty iframe to be filled by srcdoc -->
-            <iframe id="resultFrame" class="output-iframe"></iframe>
-        </div>
-
-    </div>
-     
       <!-- Scientific Calculator Card Added -->
       <div class="tool-card" data-cat="finance" onclick="openScientificCalcModal()">
         <div class="tool-icon" style="background:#e0f2fe; color:#0284c7;"><i class="fa-solid fa-calculator"></i></div>
@@ -5209,109 +5003,74 @@ function shareWebsite() {
   }
 </script>
   <script>
-        // Track the current active file
-        let currentFile = 'html';
+    function switchFileIDE(type, btnElement) {
+        const container = btnElement.closest('.docucraft-ide-container');
+        container.querySelectorAll('.file-tab').forEach(tab => tab.classList.remove('active'));
+        btnElement.classList.add('active');
+        
+        container.querySelectorAll('.code-textarea').forEach(ta => ta.classList.remove('active'));
+        document.getElementById(type + 'EditorIDE').classList.add('active');
+    }
 
-        function switchFile(type, btnElement) {
-            currentFile = type;
-            
-            // Update tabs visually
-            document.querySelectorAll('.file-tab').forEach(tab => tab.classList.remove('active'));
-            btnElement.classList.add('active');
-            
-            // Switch Textarea Wrappers
-            document.querySelectorAll('.editor-wrapper').forEach(wrapper => wrapper.classList.remove('active'));
-            document.getElementById(type + 'Wrapper').classList.add('active');
-            
-            updateLineNumbers(type);
-        }
-
-        // Update line numbers based on textarea content
-        function updateLineNumbers(type) {
-            const textarea = document.getElementById(type + 'Editor');
-            const lines = textarea.value.split('\n').length;
-            const lineNumbersDiv = document.getElementById(type + 'LineNumbers');
-            
-            let numbersHtml = '';
-            for (let i = 1; i <= lines; i++) {
-                numbersHtml += i + '<br>';
-            }
-            lineNumbersDiv.innerHTML = numbersHtml;
-        }
-
-        // Sync scroll between textarea and line numbers
-        function syncScroll(type) {
-            const textarea = document.getElementById(type + 'Editor');
-            const lineNumbersDiv = document.getElementById(type + 'LineNumbers');
-            lineNumbersDiv.scrollTop = textarea.scrollTop;
-        }
-
-        function switchMainView(view) {
-            const tabs = document.querySelectorAll('.view-tab');
+    function switchMainViewIDE(view) {
+        const tabs = document.querySelectorAll('.docucraft-ide-container .view-tab');
+        if(tabs.length > 0) {
             tabs[0].classList.toggle('active', view === 'code');
             tabs[1].classList.toggle('active', view === 'output');
-
-            const editor = document.getElementById('editorContainer');
-            const output = document.getElementById('outputContainer');
-
-            if (window.innerWidth <= 768) {
-                if (view === 'code') {
-                    editor.classList.remove('hidden-mobile-view');
-                    output.classList.remove('active-mobile-view');
-                } else {
-                    editor.classList.add('hidden-mobile-view');
-                    output.classList.add('active-mobile-view');
-                }
-            }
         }
 
-        function executeCode() {
-            const htmlContent = document.getElementById('htmlEditor').value;
-            const cssContent = document.getElementById('cssEditor').value;
-            const jsContent = document.getElementById('jsEditor').value;
+        const editor = document.getElementById('editorContainerIDE');
+        const output = document.getElementById('outputContainerIDE');
 
-            // Combine code properly
-            let finalHtml = htmlContent;
-            const styleTag = "<style>" + cssContent + "</style>";
-            const scriptTag = "<script>" + jsContent + "<\/script>";
-
-            if (finalHtml.includes('</head>')) {
-                finalHtml = finalHtml.replace('</head>', styleTag + '</head>');
+        if (window.innerWidth <= 768) {
+            if (view === 'code') {
+                editor.classList.remove('hidden-mobile-view');
+                output.classList.remove('active-mobile-view');
             } else {
-                finalHtml = styleTag + finalHtml;
-            }
-
-            if (finalHtml.includes('</body>')) {
-                finalHtml = finalHtml.replace('</body>', scriptTag + '</body>');
-            } else {
-                finalHtml += scriptTag;
-            }
-
-            // Using srcdoc to execute code safely without infinite loops or external iframe interference
-            const iframe = document.getElementById('resultFrame');
-            iframe.srcdoc = finalHtml;
-            
-            // Switch to output view automatically on mobile
-            if (window.innerWidth <= 768) {
-                switchMainView('output');
+                editor.classList.add('hidden-mobile-view');
+                output.classList.add('active-mobile-view');
+                executeDocuCraftIDE();
             }
         }
+    }
 
-        // Initialize line numbers on load
-        window.onload = function() {
-            updateLineNumbers('html');
-            updateLineNumbers('css');
-            updateLineNumbers('js');
-        };
+    function executeDocuCraftIDE() {
+        const htmlContent = document.getElementById('htmlEditorIDE').value;
+        const cssContent = document.getElementById('cssEditorIDE').value;
+        const jsContent = document.getElementById('jsEditorIDE').value;
 
-        // We only initialize basic event listeners here.
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                document.getElementById('editorContainer').classList.remove('hidden-mobile-view');
-                document.getElementById('outputContainer').classList.remove('active-mobile-view');
-            }
-        });
+        let finalHtml = htmlContent;
+        const styleTag = "<style>" + cssContent + "</style>";
+        const scriptTag = "<script>" + jsContent + "<\/script>";
+
+        if (finalHtml.includes('</head>')) {
+            finalHtml = finalHtml.replace('</head>', styleTag + '</head>');
+        } else {
+            finalHtml = styleTag + finalHtml;
+        }
+
+        if (finalHtml.includes('</body>')) {
+            finalHtml = finalHtml.replace('</body>', scriptTag + '</body>');
+        } else {
+            finalHtml += scriptTag;
+        }
+
+        const iframe = document.getElementById('resultFrameIDE');
+        iframe.src = "data:text/html;charset=utf-8," + encodeURIComponent(finalHtml);
         
-    </script>
+        if (window.innerWidth <= 768) {
+            switchMainViewIDE('output');
+        }
+    }
+
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            const editor = document.getElementById('editorContainerIDE');
+            const output = document.getElementById('outputContainerIDE');
+            if(editor) editor.classList.remove('hidden-mobile-view');
+            if(output) output.classList.remove('active-mobile-view');
+        }
+    });
+</script>
   </body>
 </html>
