@@ -1778,3 +1778,141 @@ async function generateResumeDownload() {
 window.addEventListener('online', updatePrivacyStatus);
 window.addEventListener('offline', updatePrivacyStatus);
 updatePrivacyStatus();
+<script>
+  // Modal Open/Close Controls
+  function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    if(modalId === 'pdfScannerModal') {
+      document.getElementById('imageInput').value = "";
+      document.getElementById('imageStatus').innerText = "";
+      document.getElementById('btnGenerateScanner').innerText = "Generate Scanned PDF";
+    } else {
+      document.getElementById('zipInput').value = "";
+      document.getElementById('zipStatus').innerText = "";
+      document.getElementById('btnGenerateZip').innerText = "Extract & Generate PDF";
+    }
+  }
+
+  // Show File Selection Status
+  function updateFileStatus(inputId, statusId) {
+    const files = document.getElementById(inputId).files;
+    if (files.length > 0) {
+      if(files.length === 1) {
+        document.getElementById(statusId).innerText = `1 file selected: ${files[0].name}`;
+      } else {
+        document.getElementById(statusId).innerText = `${files.length} images selected ready for scan.`;
+      }
+    }
+  }
+
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 1. Image to PDF Function
+  async function processImagesToPdf() {
+    const files = document.getElementById('imageInput').files;
+    if (files.length === 0) {
+      alert("Please select at least one image.");
+      return;
+    }
+
+    const btn = document.getElementById('btnGenerateScanner');
+    btn.innerText = "Processing Scanned PDF...";
+    btn.disabled = true;
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4'); 
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const imgData = await readFileAsDataURL(file);
+        
+        const img = new Image();
+        img.src = imgData;
+        await new Promise(resolve => img.onload = resolve);
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (img.height * pdfWidth) / img.width; 
+        
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      }
+      
+      pdf.save('DocuCraft_Scanned.pdf');
+      btn.innerText = "Success! Saved.";
+      setTimeout(() => closeModal('pdfScannerModal'), 2000);
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while generating PDF.");
+      btn.innerText = "Generate Scanned PDF";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // 2. ZIP to PDF Function
+  async function processZipToPdf() {
+    const file = document.getElementById('zipInput').files[0];
+    if (!file) {
+      alert("Please select a ZIP file.");
+      return;
+    }
+
+    const btn = document.getElementById('btnGenerateZip');
+    btn.innerText = "Extracting & Processing...";
+    btn.disabled = true;
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const zip = new JSZip();
+      
+      const loadedZip = await zip.loadAsync(file);
+      let pageCount = 0;
+
+      for (const [filename, fileData] of Object.entries(loadedZip.files)) {
+        if (!fileData.dir && filename.match(/\.(jpeg|jpg|png)$/i)) {
+          const base64Data = await fileData.async("base64");
+          const imgData = "data:image/jpeg;base64," + base64Data;
+          
+          const img = new Image();
+          img.src = imgData;
+          await new Promise(resolve => img.onload = resolve);
+          
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (img.height * pdfWidth) / img.width;
+          
+          if (pageCount > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+          pageCount++;
+        }
+      }
+      
+      if (pageCount > 0) {
+        pdf.save('DocuCraft_Zip_Converted.pdf');
+        btn.innerText = "Success! Saved.";
+        setTimeout(() => closeModal('zipToPdfModal'), 2000);
+      } else {
+        alert('No valid images (JPG/PNG) found inside the ZIP file!');
+        btn.innerText = "Extract & Generate PDF";
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error reading ZIP file. Ensure it is a valid ZIP archive.");
+      btn.innerText = "Extract & Generate PDF";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
